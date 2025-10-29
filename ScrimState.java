@@ -3,7 +3,7 @@
 public interface ScrimState {
     
     // Qué pasa cuando alguien intenta postularse
-    // Le pasamos el "scrim" (el contexto) para que el estado pueda
+    // Le pasamos el "scrim" para que el estado pueda
     // ver info (ej: ¿está lleno?) o cambiar el estado del scrim.
     void postular(Scrim scrim); 
 

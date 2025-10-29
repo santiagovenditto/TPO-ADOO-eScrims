@@ -30,7 +30,6 @@ public void iniciar(Scrim scrim) {
 public void cancelar(Scrim scrim) {
     System.out.println("El scrim ha sido CANCELADO (estaba confirmado).");
     
-    // ¡Transición al estado cancelado!
     scrim.setState(new CanceladoState()); 
 }
 }

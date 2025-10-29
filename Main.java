@@ -1,67 +1,61 @@
+import java.util.List;
+import java.util.ArrayList;
 
-// Clase principal para probar el Patrón State.
-// Aquí simulamos las acciones sobre un objeto Scrim
-// para ver cómo cambia de estado.
+
+// Clase principal para probar los Patrones State y Strategy.
 
 public class Main {
 
     public static void main(String[] args) {
 
-        System.out.println("========= INICIO DE LA SIMULACIÓN 1: FLUJO FELIZ =========");
-        
-        // 1. Creamos un Scrim.
-        // El constructor de Scrim automáticamente lo pone en "BuscandoState".
-        Scrim scrimFeliz = new Scrim();
-        
-        // 2. Intentamos una acción inválida en este estado (confirmar)
-        System.out.println("\nIntentando 'confirmar' (debería fallar):");
-        scrimFeliz.confirmarAsistencia();
+        System.out.println("========= INICIO DE LA SIMULACIÓN 1: PROBANDO STRATEGY =========");
 
-        // 3. Hacemos la acción válida: postularse.
-        // (En BuscandoState, simulamos que esto llena el lobby)
-        System.out.println("\nIntentando 'postular' (debería funcionar y cambiar a LobbyArmado):");
-        scrimFeliz.postularse();
+        // 1. Creamos las ESTRATEGIAS que vamos a usar
+        MatchmakingStrategy estrategiaMMR = new ByMMRStrategy();
+        MatchmakingStrategy estrategiaLatencia = new ByLatencyStrategy();
 
-        // 4. Intentamos una acción inválida en el nuevo estado (postular)
-        System.out.println("\nIntentando 'postular' de nuevo (debería fallar):");
-        scrimFeliz.postularse();
+        // 2. Creamos un Scrim NUEVO, pasándole la estrategia de MMR.
+        // (Nota: el constructor de Scrim fue modificado)
+        System.out.println("\nCreando Scrim con estrategia MMR...");
+        Scrim scrimConMMR = new Scrim(estrategiaMMR);
 
-        // 5. Hacemos la acción válida: confirmar.
-        // (En LobbyArmadoState, simulamos que esto confirma a todos)
-        System.out.println("\nIntentando 'confirmar' (debería funcionar y cambiar a Confirmado):");
-        scrimFeliz.confirmarAsistencia();
+        // 3. Usamos la estrategia para buscar jugadores.
+        // El Scrim usará la estrategia que tiene guardada (MMR).
+        scrimConMMR.buscarJugadores();
 
-        // 6. Hacemos la acción válida: iniciar.
-        System.out.println("\nIntentando 'iniciar' (debería funcionar y cambiar a EnJuego):");
-        scrimFeliz.iniciarPartida();
+        // 4. CAMBIAMOS la estrategia del Scrim "en caliente".
+        System.out.println("\n... El matchmaking por MMR falló, cambiamos a Latencia...");
+        scrimConMMR.setStrategy(estrategiaLatencia);
 
-        // 7. Hacemos la acción válida: finalizar.
-        System.out.println("\nIntentando 'finalizar' (debería funcionar y cambiar a Finalizado):");
-        scrimFeliz.finalizarPartida();
+        // 5. Volvemos a buscar jugadores.
+        // Ahora el Scrim usará la NUEVA estrategia (Latencia).
+        scrimConMMR.buscarJugadores();
 
-        // 8. Intentamos hacer algo en un estado final
-        System.out.println("\nIntentando 'iniciar' de nuevo (debería fallar):");
-        scrimFeliz.iniciarPartida();
 
         System.out.println("\n========= FIN DE LA SIMULACIÓN 1 =========");
 
 
-        System.out.println("\n\n========= INICIO DE LA SIMULACIÓN 2: FLUJO DE CANCELACIÓN =========");
+        System.out.println("\n\n========= INICIO DE LA SIMULACIÓN 2: FLUJO DE ESTADOS (STATE) =========");
         
-        // 1. Creamos otro Scrim.
-        Scrim scrimTriste = new Scrim();
+        // 1. Creamos un Scrim para probar el Patrón State.
+        // (Le pasamos una estrategia cualquiera, ej: MMR, para que el constructor funcione)
+        Scrim scrimDeEstados = new Scrim(new ByMMRStrategy());
+        
+        // 2. Hacemos la acción válida: postularse.
+        System.out.println("\nIntentando 'postular' (debería funcionar y cambiar a LobbyArmado):");
+        scrimDeEstados.postularse();
 
-        // 2. Pasa a Lobby Armado
-        System.out.println("\nIntentando 'postular' (para llegar a LobbyArmado):");
-        scrimTriste.postularse();
+        // 3. Hacemos la acción válida: confirmar.
+        System.out.println("\nIntentando 'confirmar' (debería funcionar y cambiar a Confirmado):");
+        scrimDeEstados.confirmarAsistencia();
 
-        // 3. El organizador lo cancela
-        System.out.println("\nIntentando 'cancelar' (debería funcionar y cambiar a Cancelado):");
-        scrimTriste.cancelarPartida();
+        // 4. Hacemos la acción válida: iniciar.
+        System.out.println("\nIntentando 'iniciar' (debería funcionar y cambiar a EnJuego):");
+        scrimDeEstados.iniciarPartida();
 
-        // 4. Intentamos postularnos a un scrim cancelado
-        System.out.println("\nIntentando 'postular' (debería fallar):");
-        scrimTriste.postularse();
+        // 5. Hacemos la acción válida: finalizar.
+        System.out.println("\nIntentando 'finalizar' (debería funcionar y cambiar a Finalizado):");
+        scrimDeEstados.finalizarPartida();
 
         System.out.println("\n========= FIN DE LA SIMULACIÓN 2 =========");
     }
