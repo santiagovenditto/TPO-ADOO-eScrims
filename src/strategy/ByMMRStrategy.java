@@ -1,4 +1,9 @@
+package strategy;
 import java.util.List;
+
+import domain.Scrim;
+import domain.Usuario;
+
 import java.util.ArrayList; // Usamos ArrayList como una implementación de List
 
 public class ByMMRStrategy implements MatchmakingStrategy {

@@ -1,6 +1,6 @@
+package state;
 
-// Segundo estado del ciclo de vida.
-// El cupo está lleno, esperando confirmación de los jugadores.
+import domain.Scrim;
 
 public class LobbyArmadoState implements ScrimState {
 

@@ -1,4 +1,9 @@
+package strategy;
 import java.util.List;
+
+import domain.Scrim;
+import domain.Usuario;
+
 import java.util.ArrayList;
 
 public class ByLatencyStrategy implements MatchmakingStrategy {

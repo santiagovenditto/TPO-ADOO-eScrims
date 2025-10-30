@@ -1,3 +1,7 @@
+package state;
+
+import domain.Scrim;
+
 public class CanceladoState implements ScrimState {
 
     @Override

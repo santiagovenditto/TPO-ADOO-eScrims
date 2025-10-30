@@ -1,7 +1,6 @@
+package state;
 
-//Cuarto estado del ciclo de vida.
-//La partida está en curso.
-//Los jugadores están jugando.
+import domain.Scrim;
 
 public class EnJuegoState implements ScrimState {
 

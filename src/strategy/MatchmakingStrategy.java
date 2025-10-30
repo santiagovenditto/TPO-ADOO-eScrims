@@ -1,5 +1,9 @@
+package strategy;
 // Necesitamos 'List' (una colección de cosas)
 import java.util.List;
+
+import domain.Scrim;
+import domain.Usuario;
 
 /**
  * Esta es la interfaz "Strategy".

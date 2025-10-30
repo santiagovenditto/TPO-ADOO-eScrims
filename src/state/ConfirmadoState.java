@@ -1,6 +1,10 @@
+package state;
 //Tercer estado del ciclo de vida.
 //Todos los jugadores confirmaron. El scrim está "lockeado",
 //y esperando la fecha/hora de inicio para pasar a "En Juego".
+
+import domain.Scrim;
+
 public class ConfirmadoState implements ScrimState {
 
     @Override

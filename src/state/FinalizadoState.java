@@ -1,7 +1,6 @@
+package state;
 
-// Quinto estado y final del ciclo de vida "feliz".
-// La partida terminó. En este punto se cargan estadísticas.
-// Es un estado terminal.
+import domain.Scrim;
 
 public class FinalizadoState implements ScrimState {
 

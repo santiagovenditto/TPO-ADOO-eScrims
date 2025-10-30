@@ -1,6 +1,10 @@
+package state;
 // Esta es la implementación del primer estado
 // "implements ScrimState" significa que "firma el contrato" y
 // está OBLIGADO a tener los 5 métodos.
+
+import domain.Scrim;
+
 public class BuscandoState implements ScrimState {
 
     @Override

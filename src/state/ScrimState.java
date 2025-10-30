@@ -1,5 +1,9 @@
+package state;
 // Esto define una plantilla para todos los estados.
 // Cualquier clase que sea un "Estado" DEBE tener estos 5 métodos.
+
+import domain.Scrim;
+
 public interface ScrimState {
     
     // Qué pasa cuando alguien intenta postularse
