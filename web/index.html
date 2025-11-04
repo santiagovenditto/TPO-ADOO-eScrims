@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>eScrims - Login</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <div class="card">
+      <div class="brand">
+        <svg viewBox="0 0 100 100" class="logo" aria-hidden="true"><defs></defs>
+          <circle cx="50" cy="50" r="45" fill="url(#g)" />
+        </svg>
+        <h1>eScrims</h1>
+        <p class="subtitle">Encuentra tu equipo. Juega mejor.</p>
+      </div>
+
+      <div class="forms">
+        <form id="loginForm" class="form active" autocomplete="off">
+          <h2>Iniciar sesión</h2>
+          <div class="field">
+            <label for="loginEmail">Email</label>
+            <input id="loginEmail" type="email" required />
+          </div>
+          <div class="field">
+            <label for="loginPassword">Contraseña</label>
+            <input id="loginPassword" type="password" required minlength="6" />
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn primary">Entrar</button>
+            <button type="button" id="showRegister" class="btn ghost">Crear cuenta</button>
+          </div>
+          <p class="notice" id="loginNotice"></p>
+        </form>
+
+        <form id="registerForm" class="form" autocomplete="off">
+          <h2>Registro</h2>
+          <div class="field">
+            <label for="regUser">Usuario</label>
+            <input id="regUser" type="text" required minlength="3" />
+          </div>
+          <div class="field">
+            <label for="regEmail">Email</label>
+            <input id="regEmail" type="email" required />
+          </div>
+          <div class="field">
+            <label for="regPassword">Contraseña</label>
+            <input id="regPassword" type="password" required minlength="6" />
+          </div>
+          <div class="field">
+            <label for="regPassword2">Confirmar contraseña</label>
+            <input id="regPassword2" type="password" required minlength="6" />
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn primary">Registrar</button>
+            <button type="button" id="showLogin" class="btn ghost">Volver a login</button>
+          </div>
+          <p class="notice" id="regNotice"></p>
+        </form>
+
+        <section id="appArea" class="app-area hidden">
+          <h2>Bienvenido, <span id="userLabel"></span></h2>
+          <p>Has iniciado sesión con éxito en modo local (localStorage).</p>
+          <div class="actions">
+            <button id="logoutBtn" class="btn danger">Cerrar sesión</button>
+          </div>
+
+          <div class="profile card small" style="margin-top:12px;">
+            <h3>Preferencias</h3>
+            <div class="field">
+              <label>Notificaciones por canal</label>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+                <label class="role-badge"><input type="checkbox" id="prefPush" /> Push</label>
+                <label class="role-badge"><input type="checkbox" id="prefEmail" /> Email</label>
+                <label class="role-badge"><input type="checkbox" id="prefDiscord" /> Discord</label>
+              </div>
+            </div>
+            <div class="field">
+              <label for="prefReminder">Recordatorio (horas antes)</label>
+              <input id="prefReminder" type="number" min="0" value="2" />
+            </div>
+            <div class="actions"><button id="savePrefs" class="btn primary">Guardar preferencias</button></div>
+          </div>
+
+          <hr />
+
+          <section class="scrim-area">
+            <div class="scrim-creator card small">
+              <h3>Crear scrim</h3>
+              <div class="field">
+                <label for="scrimTitle">Título</label>
+                <input id="scrimTitle" type="text" placeholder="P. ej. Scrim 5v5 - Tarde" />
+              </div>
+              <div class="field">
+                <label for="scrimFormat">Formato</label>
+                <select id="scrimFormat">
+                  <option value="5v5">5v5</option>
+                  <option value="3v3">3v3</option>
+                  <option value="1v1">1v1</option>
+                </select>
+              </div>
+              <div class="field grid-2">
+                <div>
+                  <label for="scrimRegion">Región</label>
+                  <input id="scrimRegion" type="text" placeholder="ej. EU, NA" />
+                </div>
+                <div>
+                  <label for="scrimPlayers">Jugadores por lado</label>
+                  <input id="scrimPlayers" type="number" min="1" value="5" />
+                </div>
+              </div>
+              <div class="field grid-2">
+                <div>
+                  <label for="scrimDate">Fecha / Hora</label>
+                  <input id="scrimDate" type="datetime-local" />
+                </div>
+                <div>
+                  <label for="scrimMode">Modalidad</label>
+                  <select id="scrimMode"><option>Ranked-like</option><option>Casual</option><option>Práctica</option></select>
+                </div>
+              </div>
+              <div class="field grid-3">
+                <div>
+                  <label for="scrimMinMMR">MMR min</label>
+                  <input id="scrimMinMMR" type="number" min="0" />
+                </div>
+                <div>
+                  <label for="scrimMaxMMR">MMR max</label>
+                  <input id="scrimMaxMMR" type="number" min="0" />
+                </div>
+                <div>
+                  <label for="scrimLatency">Latencia máx (ms)</label>
+                  <input id="scrimLatency" type="number" min="0" value="100" />
+                </div>
+              </div>
+              <div class="actions">
+                <button id="createScrimBtn" class="btn primary">Crear</button>
+              </div>
+            </div>
+
+            <div class="scrim-list card small">
+              <h3>Scrims</h3>
+              <div id="scrimListContainer" class="list"></div>
+            </div>
+          </section>
+
+          <section class="aux-area" style="margin-top:14px;display:flex;gap:12px;">
+            <div class="card small" style="flex:1;">
+              <h3>Notificaciones <small id="notifCount"></small></h3>
+              <div id="notifList" style="margin-top:8px;max-height:160px;overflow:auto"></div>
+            </div>
+            <div class="card small" style="width:320px;">
+              <h3>Resultados / Feedback</h3>
+              <div id="resultsArea" style="margin-top:8px">Seleccioná un scrim finalizado para cargar resultados.</div>
+            </div>
+          </section>
+        </section>
+      </div>
+    </div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
