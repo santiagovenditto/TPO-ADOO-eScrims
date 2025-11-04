@@ -41,6 +41,7 @@ public class WebServer {
     // scrims persistence (NDJSON simple storage)
     server.createContext("/api/scrims", new ScrimsHandler());
     server.createContext("/api/scrims/delete", new ScrimDeleteHandler());
+    server.createContext("/api/scrims/update", new ScrimUpdateHandler());
     // reports
     server.createContext("/api/report", new ReportHandler());
 
@@ -100,16 +101,52 @@ public class WebServer {
         InputStream in = ex.getRequestBody();
         String s = new String(in.readAllBytes(), StandardCharsets.UTF_8).trim();
         Map<String,String> m = new HashMap<>();
-        // Very small JSON parser for flat objects with string values. Assumes well-formed input.
-        s = s.replaceAll("\\n", "").trim();
-        if (s.startsWith("{") && s.endsWith("}")) s = s.substring(1, s.length()-1);
-        String[] parts = s.split(",");
-        for (String p : parts) {
-            String[] kv = p.split(":",2);
-            if (kv.length!=2) continue;
-            String k = kv[0].trim().replaceAll("^\"|\"$", "");
-            String v = kv[1].trim().replaceAll("^\"|\"$", "");
-            m.put(k, v);
+        if (s.isEmpty()) return m;
+        // remove newlines
+        s = s.replaceAll("\\r?\\n", "").trim();
+        // expect object like {"k":"v","k2":"v2"}
+        if (!s.startsWith("{" ) || !s.endsWith("}")) return m;
+        s = s.substring(1, s.length()-1).trim();
+        // parse by scanning for quoted key and quoted value pairs to allow commas/colons inside strings
+        int i = 0; int n = s.length();
+        while (i < n) {
+            // skip whitespace and commas
+            while (i<n && (Character.isWhitespace(s.charAt(i)) || s.charAt(i)==',')) i++;
+            if (i>=n) break;
+            // parse key (expecting quoted string)
+            if (s.charAt(i)!='"') break;
+            int kstart = i+1;
+            StringBuilder key = new StringBuilder();
+            boolean esc = false;
+            for (int j=kstart;j<n;j++){
+                char c = s.charAt(j);
+                if (esc) { key.append(c); esc = false; continue; }
+                if (c=='\\') { esc = true; continue; }
+                if (c=='\"') { i = j+1; break; }
+                key.append(c);
+            }
+            // skip to ':'
+            while (i<n && Character.isWhitespace(s.charAt(i))) i++;
+            if (i<n && s.charAt(i)==':') i++; else break;
+            while (i<n && Character.isWhitespace(s.charAt(i))) i++;
+            // parse value (accept quoted string or bare token)
+            String value = "";
+            if (i<n && s.charAt(i)=='\"'){
+                i++; StringBuilder val = new StringBuilder(); esc = false;
+                for (int j=i;j<n;j++){
+                    char c = s.charAt(j);
+                    if (esc) { val.append(c); esc = false; continue; }
+                    if (c=='\\') { esc = true; continue; }
+                    if (c=='\"') { i = j+1; break; }
+                    val.append(c);
+                }
+                value = val.toString();
+            } else {
+                // unquoted value (number, true, false, null)
+                int j=i; while (j<n && s.charAt(j)!=',' ) j++; value = s.substring(i,j).trim(); i = j;
+            }
+            m.put(key.toString(), value);
+            // advance past comma handled at loop start
         }
         return m;
     }
@@ -280,6 +317,28 @@ public class WebServer {
         }
     }
 
+
+    // Update endpoint: replace scrim with same id (remove existing then append new JSON object)
+    class ScrimUpdateHandler implements HttpHandler {
+        public void handle(HttpExchange ex) throws IOException {
+            if (!ex.getRequestMethod().equalsIgnoreCase("POST")) { sendJson(ex,405,"{\"ok\":false,\"message\":\"Method not allowed\"}"); return; }
+            try{
+                InputStream in = ex.getRequestBody();
+                String body = new String(in.readAllBytes(), StandardCharsets.UTF_8).trim();
+                if (body.isEmpty()){ sendJson(ex,400,"{\"ok\":false,\"message\":\"empty body\"}"); return; }
+                // attempt to extract id from the JSON body using simple scan for "id":"..."
+                String id = null;
+                int idx = body.indexOf("\"id\"");
+                if (idx!=-1){ int col = body.indexOf(':', idx); if(col!=-1){ int q1 = body.indexOf('"', col); int q2 = body.indexOf('"', q1+1); if(q1!=-1 && q2!=-1) id = body.substring(q1+1,q2); } }
+                if (id==null || id.isEmpty()){ sendJson(ex,400,"{\"ok\":false,\"message\":\"missing id in body\"}"); return; }
+                // remove existing
+                removeNdjsonById("scrims.ndjson", id);
+                // append new object
+                appendNdjson("scrims.ndjson", body);
+                sendJson(ex,200,"{\"ok\":true}");
+            }catch(Exception e){ e.printStackTrace(); sendJson(ex,500,"{\"ok\":false,\"message\":\"server error\"}"); }
+        }
+    }
     // Report handler: append a report and optionally increment strikes file
     class ReportHandler implements HttpHandler {
         public void handle(HttpExchange ex) throws IOException {

@@ -67,6 +67,11 @@ small{color:var(--muted)}
 .badge.state-confirmado{background:rgba(76,175,80,0.08);color:#66bb6a}
 .scrim-actions{display:flex;gap:8px}
 
+.reminder-badge{background:rgba(124,92,255,0.08);color:var(--accent1);font-weight:700}
+.bot-label{background:rgba(255,255,255,0.02);padding:4px 6px;border-radius:6px;margin-left:6px}
+.bot-name{opacity:0.95}
+.bot-mmr{color:var(--muted);font-size:12px;margin-left:6px}
+
 @media (max-width:820px){
   .scrim-area{flex-direction:column}
 }

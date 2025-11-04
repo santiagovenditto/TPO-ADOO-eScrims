@@ -14,7 +14,7 @@ public class Main {
     public static void main(String[] args) {
         try {
             // start web server (serves web/ and exposes API)
-            WebServer srv = new WebServer(8080, 0);
+            WebServer srv = new WebServer(9090, 0);
             srv.start();
         } catch (Exception e) {
             System.err.println("No pude iniciar el servidor web: " + e.getMessage());

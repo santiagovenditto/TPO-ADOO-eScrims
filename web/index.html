@@ -77,11 +77,11 @@
                 <label class="role-badge"><input type="checkbox" id="prefDiscord" /> Discord</label>
               </div>
             </div>
-            <div class="field">
-              <label for="prefReminder">Recordatorio (horas antes)</label>
-              <input id="prefReminder" type="number" min="0" value="2" />
-            </div>
-            <div class="actions"><button id="savePrefs" class="btn primary">Guardar preferencias</button></div>
+              <div class="field">
+                <label for="prefReminderGlobal">Recordatorio por defecto (horas antes)</label>
+                <input id="prefReminderGlobal" type="number" min="0" value="2" />
+              </div>
+              <div class="actions"><button id="savePrefs" class="btn primary">Guardar preferencias</button></div>
           </div>
 
           <hr />
@@ -134,6 +134,10 @@
                   <label for="scrimLatency">Latencia máx (ms)</label>
                   <input id="scrimLatency" type="number" min="0" value="100" />
                 </div>
+              </div>
+              <div class="field">
+                <label for="scrimReminder">Recordatorio (horas antes)</label>
+                <input id="scrimReminder" type="number" min="0" placeholder="(usar preferencia)" />
               </div>
               <div class="actions">
                 <button id="createScrimBtn" class="btn primary">Crear</button>

@@ -1,0 +1,1 @@
+{"id":"s_test_sync","title":"sync test updated","format":"5v5","region":"test","owner":"testuser","state":"Buscando","created":1762289999999,"playersPerSide":5,"date":null,"mode":"Ranked-like","minMMR":null,"maxMMR":null,"latency":100,"participants":["alice","bob","carol"],"confirmations":{},"strategy":"ByMMR","rolesRequired":[],"waitlist":[],"results":null}

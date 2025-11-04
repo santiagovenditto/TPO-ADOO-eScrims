@@ -42,7 +42,9 @@ function applyPrefsToUI(username){
   const elPush = document.getElementById('prefPush'); if(elPush) elPush.checked = !!merged.push;
   const elEmail = document.getElementById('prefEmail'); if(elEmail) elEmail.checked = !!merged.email;
   const elDiscord = document.getElementById('prefDiscord'); if(elDiscord) elDiscord.checked = !!merged.discord;
-  const elRem = document.getElementById('prefReminder'); if(elRem) elRem.value = (merged.reminderHours!=null?merged.reminderHours:2);
+  const elRem = document.getElementById('prefReminderGlobal'); if(elRem) elRem.value = (merged.reminderHours!=null?merged.reminderHours:2);
+  // prefill scrim-specific field if present and empty
+  const scrRem = document.getElementById('scrimReminder'); if(scrRem && (scrRem.value===null || scrRem.value==='')) scrRem.value = (merged.reminderHours!=null?merged.reminderHours:2);
 }
 
 function getSession(){
@@ -141,6 +143,20 @@ async function refreshScrimsFromServer(){
   return loadScrims();
 }
 
+// Sync a scrim object to server: prefer update endpoint, fallback to delete+post if not available.
+async function syncScrimToServer(scrim){
+  if(!scrim || !scrim.id) return;
+  try{
+    // prefer the update endpoint
+    const up = await fetch(API + '/scrims/update', {method:'POST', body: JSON.stringify(scrim), headers:{'Content-Type':'application/json'}}).catch(()=>null);
+    if (!up || !up.ok){
+      // fallback: delete + post
+      await fetch(API + '/scrims/delete', {method:'POST', body: JSON.stringify({id: scrim.id}), headers:{'Content-Type':'application/json'}}).catch(()=>{});
+      await fetch(API + '/scrims', {method:'POST', body: JSON.stringify(scrim), headers:{'Content-Type':'application/json'}}).catch(()=>{});
+    }
+  }catch(e){ /* ignore network errors for now */ }
+}
+
 function newScrimObject(title, format, region, owner){
   return { id: 's_'+Date.now(), title, format, region, owner, state: 'Buscando', created: Date.now(),
     playersPerSide: 5, date: null, mode: 'Ranked-like', minMMR: null, maxMMR: null, latency: 100,
@@ -167,6 +183,10 @@ function renderScrims(){
     const badge = document.createElement('div'); badge.className='badge ' + stateBadgeClass(s.state);
     badge.textContent = s.state;
     right.appendChild(badge);
+    // show reminder badge if configured for this scrim
+    if (s.reminderHours && Number(s.reminderHours)>0) {
+      const rBadge = document.createElement('div'); rBadge.className = 'badge reminder-badge'; rBadge.textContent = s.reminderHours + 'h'; right.appendChild(rBadge);
+    }
     const actions = document.createElement('div'); actions.className='scrim-actions';
     // participant info and actions
     const sCapacity = (s.playersPerSide||5) * 2;
@@ -179,7 +199,17 @@ function renderScrims(){
       const ul = document.createElement('div'); ul.style.marginTop='6px'; ul.style.fontSize='13px';
       s.participants.forEach(p=>{
         const item = document.createElement('div'); item.style.display='flex'; item.style.alignItems='center'; item.style.gap='8px';
-        const name = document.createElement('span'); name.textContent = p; item.appendChild(name);
+        const name = document.createElement('span'); name.textContent = p;
+        if(p && p.startsWith && p.startsWith('bot_')){
+          name.className='bot-name';
+          // try to read metadata stored for this bot
+          let meta = null; try{ meta = JSON.parse(localStorage.getItem('bot_meta_'+p) || 'null'); }catch(e){ meta = null; }
+          const bl = document.createElement('span'); bl.className='bot-label'; bl.textContent='Bot'; bl.style.marginLeft='6px'; bl.style.fontSize='12px'; bl.style.opacity='0.95';
+          if(meta){
+            bl.title = 'Role: '+(meta.role||'n/a')+' • MMR: '+(meta.mmr||'n/a')+' • '+(meta.latency||'?')+'ms';
+            const mm = document.createElement('span'); mm.className='bot-mmr'; mm.textContent = ' • MMR '+(meta.mmr||''); mm.style.marginLeft='8px'; mm.style.fontSize='12px'; mm.style.opacity='0.9'; item.appendChild(name); item.appendChild(bl); item.appendChild(mm);
+          } else { item.appendChild(name); item.appendChild(bl); }
+        } else { item.appendChild(name); }
   // strikes count
   const strikes = JSON.parse(localStorage.getItem('strikes_'+p)||'[]').length;
   if(strikes>0){ const sb = document.createElement('span'); sb.className='badge'; sb.textContent = '⚠️ '+strikes; sb.style.marginLeft='6px'; item.appendChild(sb); }
@@ -203,6 +233,8 @@ function renderScrims(){
       } else {
         const b = createActionBtn('Retirarme', ()=>unpostular(s.id, me), 'ghost'); actions.appendChild(b);
       }
+  // owner helper: simulate filling the scrim to reach LobbyArmado
+  if(me===s.owner){ const sim = createActionBtn('Simular llenar', ()=>simulateFill(s.id)); actions.appendChild(sim); }
     }
     if(s.state==='LobbyArmado'){
       // participants can confirm
@@ -210,7 +242,7 @@ function renderScrims(){
         const b = createActionBtn('Confirmar asistencia', ()=>confirmar(s.id, me)); actions.appendChild(b);
       }
       // organizer quick confirm-all
-      if(me===s.owner){ const b2 = createActionBtn('Forzar confirmar todo', ()=>forceConfirmAll(s.id)); actions.appendChild(b2); }
+  if(me===s.owner){ const b2 = createActionBtn('Forzar confirmar todo', ()=>forceConfirmAll(s.id)); actions.appendChild(b2); const sim2 = createActionBtn('Simular confirmar (owner)', ()=>simulateFillAndConfirm(s.id)); actions.appendChild(sim2); }
     }
     if(s.state==='Confirmado'){
       if(me===s.owner){ const b = createActionBtn('Iniciar', ()=>changeState(s.id,'EnJuego')); actions.appendChild(b); }
@@ -218,10 +250,14 @@ function renderScrims(){
     if(s.state==='EnJuego'){
       if(me===s.owner){ const b = createActionBtn('Finalizar', ()=>changeState(s.id,'Finalizado')); actions.appendChild(b); }
     }
+  // owner quick controls to simulate start and finish
+  if(me===s.owner){ const bs = createActionBtn('Simular inicio', ()=>simulateStart(s.id)); actions.appendChild(bs); const bf = createActionBtn('Simular fin', ()=>simulateFinish(s.id)); actions.appendChild(bf); }
     // cancel available for owner
     if(me===s.owner && s.state!=='Finalizado'){
       const c = createActionBtn('Cancelar', ()=>{ if(confirm('Cancelar scrim?')) changeState(s.id,'Cancelado'); }, 'ghost'); actions.appendChild(c);
     }
+  // owner helper: remove simulated bots
+  if(me===s.owner){ const rb = createActionBtn('Limpiar bots', ()=>removeBots(s.id), 'ghost'); actions.appendChild(rb); }
     // always allow delete
     const del = createActionBtn('Eliminar', ()=>{ if(confirm('Eliminar scrim?')) removeScrim(s.id); }, 'ghost');
     actions.appendChild(del);
@@ -291,7 +327,7 @@ function loadPrefsForUser(username){
 
 document.getElementById('savePrefs')?.addEventListener('click', ()=>{
   const s = getSession(); if(!s||!s.username) return alert('Inicia sesión');
-  const prefs = {push: !!document.getElementById('prefPush').checked, email: !!document.getElementById('prefEmail').checked, discord: !!document.getElementById('prefDiscord').checked, reminderHours: parseInt(document.getElementById('prefReminder').value)||0};
+  const prefs = {push: !!document.getElementById('prefPush').checked, email: !!document.getElementById('prefEmail').checked, discord: !!document.getElementById('prefDiscord').checked, reminderHours: parseInt(document.getElementById('prefReminderGlobal').value)||0};
   savePrefsForUser(s.username, prefs); alert('Preferencias guardadas');
 });
 
@@ -355,6 +391,7 @@ function changeState(id, to){
   const arr = loadScrims();
   const s = arr.find(x=>x.id===id); if(!s) return;
   s.state = to; saveScrims(arr); renderScrims();
+  try{ syncScrimToServer(s).catch(()=>{}); }catch(e){}
 }
 
 function postular(id, user){
@@ -368,6 +405,7 @@ function postular(id, user){
   // if reached capacity -> move to LobbyArmado
   if(s.participants.length>=cap){ s.state='LobbyArmado'; }
   saveScrims(arr); renderScrims();
+  try{ syncScrimToServer(s).catch(()=>{}); }catch(e){}
 }
 
 function unpostular(id, user){
@@ -375,6 +413,7 @@ function unpostular(id, user){
   s.participants = s.participants.filter(p=>p!==user); delete s.confirmations[user];
   // if removed, revert to Buscando
   s.state='Buscando'; saveScrims(arr); renderScrims();
+  try{ syncScrimToServer(s).catch(()=>{}); }catch(e){}
 }
 
 function confirmar(id, user){
@@ -384,12 +423,61 @@ function confirmar(id, user){
   // check if all confirmed
   const all = s.participants.length>0 && s.participants.every(p=>s.confirmations[p]);
   if(all) s.state='Confirmado'; saveScrims(arr); renderScrims();
+  try{ syncScrimToServer(s).catch(()=>{}); }catch(e){}
 }
 
 function forceConfirmAll(id){
   const arr = loadScrims(); const s = arr.find(x=>x.id===id); if(!s) return;
   s.participants.forEach(p=> s.confirmations[p]=true);
   s.state='Confirmado'; saveScrims(arr); renderScrims();
+  try{ syncScrimToServer(s).catch(()=>{}); }catch(e){}
+}
+
+// Helpers for testing/owner convenience
+function simulateFill(id){
+  const arr = loadScrims(); const s = arr.find(x=>x.id===id); if(!s) return;
+  const cap = (s.playersPerSide||5)*2;
+  // add fake participants until capacity (use unique names)
+  let i=0; while(s.participants.length<cap){ const botId = 'bot_'+Date.now()+'_'+(i++); s.participants.push(botId);
+    // store small metadata for better UX
+    const meta = { role: ['Top','Jg','Mid','Bot','Sup'][Math.floor(Math.random()*5)], mmr: Math.floor(800 + Math.random()*1200), latency: Math.floor(30+Math.random()*170) };
+    try{ localStorage.setItem('bot_meta_'+botId, JSON.stringify(meta)); }catch(e){}
+  }
+  s.state = 'LobbyArmado'; saveScrims(arr); renderScrims();
+  try{ syncScrimToServer(s).catch(()=>{}); }catch(e){}
+}
+
+function simulateFillAndConfirm(id){
+  const arr = loadScrims(); const s = arr.find(x=>x.id===id); if(!s) return;
+  simulateFill(id);
+  s.participants.forEach(p=> s.confirmations[p]=true);
+  s.state = 'Confirmado'; saveScrims(arr); renderScrims();
+  try{ syncScrimToServer(s).catch(()=>{}); }catch(e){}
+}
+
+// owner helpers to simulate game start/finish
+function simulateStart(id){
+  const arr = loadScrims(); const s = arr.find(x=>x.id===id); if(!s) return;
+  s.state = 'EnJuego'; saveScrims(arr); renderScrims();
+  try{ syncScrimToServer(s).catch(()=>{}); }catch(e){}
+}
+
+function simulateFinish(id){
+  const arr = loadScrims(); const s = arr.find(x=>x.id===id); if(!s) return;
+  s.state = 'Finalizado'; s.results = { winner: 'Equipo A', notes: 'Simulación automática', recordedBy: (getSession()||{}).username||'owner', time: Date.now() };
+  saveScrims(arr); renderScrims();
+  try{ syncScrimToServer(s).catch(()=>{}); }catch(e){}
+}
+
+function removeBots(id){
+  const arr = loadScrims(); const s = arr.find(x=>x.id===id); if(!s) return;
+  s.participants = s.participants.filter(p=> !(p && p.startsWith && p.startsWith('bot_')));
+  // remove corresponding confirmations
+  Object.keys(s.confirmations||{}).forEach(k=>{ if(k.startsWith('bot_')) delete s.confirmations[k]; });
+  // if no participants, set to Buscando
+  if(!s.participants || s.participants.length===0) s.state='Buscando';
+  saveScrims(arr); renderScrims();
+  try{ syncScrimToServer(s).catch(()=>{}); }catch(e){}
 }
 
 // scheduler: check scrims periodically to auto-transition Confirmado -> EnJuego when date reached
@@ -427,8 +515,12 @@ createScrimBtn.addEventListener('click', async ()=>{
   const owner = s && s.username ? s.username : 'anon';
   const obj = newScrimObject(title, format, region, owner);
   obj.playersPerSide = players; obj.date = date; obj.mode = mode; obj.minMMR = minMMR; obj.maxMMR = maxMMR; obj.latency = latency;
-  // copy reminder hours from preferences input (per-scrim override)
-  const rh = parseInt(document.getElementById('prefReminder')?.value || '0'); if(rh>0) obj.reminderHours = rh;
+  // copy reminder hours: prefer scrim-specific value, fallback to user's global preference
+  const scrRemVal = document.getElementById('scrimReminder')?.value;
+  let rh = 0;
+  if (scrRemVal && scrRemVal.trim()!=='') rh = parseInt(scrRemVal) || 0;
+  if (rh<=0) rh = parseInt(document.getElementById('prefReminderGlobal')?.value || '0') || 0;
+  if(rh>0) obj.reminderHours = rh;
   try{ await fetch(API + '/scrims', {method:'POST', body: JSON.stringify(obj), headers:{'Content-Type':'application/json'}}); }catch(e){}
   await refreshScrimsFromServer(); renderScrims();
   // clear fields
