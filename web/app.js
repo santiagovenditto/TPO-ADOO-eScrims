@@ -249,14 +249,12 @@ function renderScrims(){
           if(meta){ name.title = 'Role: '+(meta.role||'n/a')+' • Ranking: '+(meta.mmr||'n/a')+' • '+(meta.latency||'?')+'ms'; }
           item.appendChild(name);
           // append ranking display if available
-          const rankingVal = getParticipantRanking(localScrim, p) || (meta && meta.mmr);
-          if(rankingVal){ const rs = document.createElement('span'); rs.className='bot-mmr'; rs.textContent = ' • '+rankingVal; rs.style.marginLeft='8px'; rs.style.fontSize='12px'; rs.style.opacity='0.9'; item.appendChild(rs); }
+          // ranking/MMR display removed per UX: do not show numbers next to participants
         } else {
           name.textContent = p;
           item.appendChild(name);
           // show ranking for real users if we have it cached locally
-          const userRank = getParticipantRanking(localScrim, p);
-          if(userRank){ const rs = document.createElement('span'); rs.className='bot-mmr'; rs.textContent = ' • '+userRank; rs.style.marginLeft='8px'; rs.style.fontSize='12px'; rs.style.opacity='0.9'; item.appendChild(rs); }
+          // ranking/MMR display removed for real users as well
         }
   // strikes count
   const strikes = JSON.parse(localStorage.getItem('strikes_'+p)||'[]').length;
@@ -265,7 +263,7 @@ function renderScrims(){
   const banned = !!localStorage.getItem('banned_'+p);
   if(banned){ const bb = document.createElement('span'); bb.className='badge danger'; bb.textContent = 'BANEADO'; bb.style.marginLeft='6px'; item.appendChild(bb); }
         // report link
-        const rpt = document.createElement('a'); rpt.href='#'; rpt.style.fontSize='12px'; rpt.textContent='Reportar'; rpt.addEventListener('click', (ev)=>{ ev.preventDefault(); const reason = prompt('Motivo del reporte para '+p+'?'); if(reason) { reportPlayer(p, reason, (getSession()||{}).username); } });
+  const rpt = document.createElement('a'); rpt.href='#'; rpt.style.fontSize='12px'; rpt.textContent='Reportar'; rpt.addEventListener('click', (ev)=>{ ev.preventDefault(); const displayName = (typeof getParticipantDisplayName === 'function') ? getParticipantDisplayName(localScrim, p) : p; const reason = prompt('Motivo del reporte para '+displayName+'?'); if(reason) { reportPlayer(p, reason, (getSession()||{}).username); } });
         item.appendChild(rpt);
         ul.appendChild(item);
       });
