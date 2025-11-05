@@ -50,16 +50,7 @@ function setLogged(username, token){
 }
 
 function applyPrefsToUI(username){
-  const prefs = loadPrefsForUser(username) || {};
-  const def = {push:true, email:false, discord:false, reminderHours:2};
-  const merged = Object.assign({}, def, prefs);
-  if(!localStorage.getItem('prefs_'+username)) savePrefsForUser(username, merged);
-  const elPush = document.getElementById('prefPush'); if(elPush) elPush.checked = !!merged.push;
-  const elEmail = document.getElementById('prefEmail'); if(elEmail) elEmail.checked = !!merged.email;
-  const elDiscord = document.getElementById('prefDiscord'); if(elDiscord) elDiscord.checked = !!merged.discord;
-  const elRem = document.getElementById('prefReminderGlobal'); if(elRem) elRem.value = (merged.reminderHours!=null?merged.reminderHours:2);
-  // prefill scrim-specific field if present and empty
-  const scrRem = document.getElementById('scrimReminder'); if(scrRem && (scrRem.value===null || scrRem.value==='')) scrRem.value = (merged.reminderHours!=null?merged.reminderHours:2);
+  // preferences removed — no-op
 }
 
 function getSession(){
@@ -332,18 +323,12 @@ document.addEventListener('DOMContentLoaded', ()=>{ renderNotifs(); });
 
 // Preferences per user
 function savePrefsForUser(username, prefs){
-  const key = 'prefs_'+username;
-  localStorage.setItem(key, JSON.stringify(prefs));
+  // preferences removed — noop
 }
 function loadPrefsForUser(username){
-  const key = 'prefs_'+username; try{ return JSON.parse(localStorage.getItem(key)||'{}'); }catch(e){ return {}; }
+  return {};
 }
-
-document.getElementById('savePrefs')?.addEventListener('click', ()=>{
-  const s = getSession(); if(!s||!s.username) return alert('Inicia sesión');
-  const prefs = {push: !!document.getElementById('prefPush').checked, email: !!document.getElementById('prefEmail').checked, discord: !!document.getElementById('prefDiscord').checked, reminderHours: parseInt(document.getElementById('prefReminderGlobal').value)||0};
-  savePrefsForUser(s.username, prefs); alert('Preferencias guardadas');
-});
+// preferences UI removed — no handlers
 
 // simulate channel dispatch
 function dispatchToChannels(username, text){

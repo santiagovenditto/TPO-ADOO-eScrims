@@ -135,3 +135,9 @@ Web server started. Open http://localhost:9090
 [STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/styles.css
 [STATIC] Requested path: /app.js
 [STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/app.js
+[STATIC] Requested path: /
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/index.html
+[STATIC] Requested path: /styles.css
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/styles.css
+[STATIC] Requested path: /app.js
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/app.js

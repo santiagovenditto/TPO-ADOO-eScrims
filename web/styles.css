@@ -37,16 +37,16 @@ body{
   border:0; /* remove border to avoid seam */
     margin-top:10px; /* small gap so header never visually touches the card */
 }
-.brand{width:320px;padding:18px;background:linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.006));border-radius:12px;position:relative}
+.brand{width:320px;padding:18px;background:linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.006));border-radius:12px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center}
 .card{min-height:420px}
   .scrim-creator{background: linear-gradient(180deg, rgba(255,255,255,0.028), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.04); padding:22px; border-radius:14px; box-shadow: 0 10px 30px rgba(2,6,23,0.55)}
-.logo{width:72px;height:72px;display:block;margin-bottom:12px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.04);box-shadow:0 6px 18px rgba(2,6,23,0.5)}
-.brand h1{margin:0 0 6px;font-size:26px}
+.logo{width:72px;height:72px;display:block;margin:6px auto 12px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.04);box-shadow:0 6px 18px rgba(2,6,23,0.5)}
+.brand h1{margin:6px 0 6px;font-size:26px}
   .scrim-card{padding:18px;border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.035);display:flex;justify-content:space-between;align-items:flex-start;box-shadow: 0 10px 30px rgba(2,6,23,0.45)}
   /* ensure scrim list column doesn't visually overlap creator */
   .scrim-list.card{min-height:260px}
   .scrim-list .list{padding:12px}
-.subtitle{margin:0;color:var(--muted)}
+.subtitle{margin:0;color:var(--muted);text-align:center}
 .forms{flex:1;padding:6px}
 .form{display:none;animation:fade .28s ease both}
 .form.active{display:block}
