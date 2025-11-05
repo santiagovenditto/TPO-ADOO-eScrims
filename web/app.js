@@ -293,7 +293,7 @@ function renderScrims(){
         const b = createActionBtn('Confirmar asistencia', ()=>confirmar(s.id, me)); actions.appendChild(b);
       }
       // organizer quick confirm-all
-  if(me===s.owner){ const b2 = createActionBtn('Forzar confirmar todo', ()=>forceConfirmAll(s.id)); actions.appendChild(b2); const sim2 = createActionBtn('Simular confirmar (owner)', ()=>simulateFillAndConfirm(s.id)); actions.appendChild(sim2); }
+  if(me===s.owner){ const b2 = createActionBtn('Forzar confirmar todo', ()=>forceConfirmAll(s.id)); actions.appendChild(b2); }
     }
     if(s.state==='Confirmado'){
       if(me===s.owner){ const b = createActionBtn('Iniciar', ()=>changeState(s.id,'EnJuego')); actions.appendChild(b); }
@@ -312,7 +312,7 @@ function renderScrims(){
       const c = createActionBtn('Cancelar', ()=>{ if(confirm('Cancelar scrim?')) changeState(s.id,'Cancelado'); }, 'ghost'); actions.appendChild(c);
     }
   // owner helper: remove simulated bots
-  if(me===s.owner){ const rb = createActionBtn('Limpiar bots', ()=>removeBots(s.id), 'ghost'); actions.appendChild(rb); }
+  // button hidden per UX request
     // always allow delete
     const del = createActionBtn('Eliminar', ()=>{ if(confirm('Eliminar scrim?')) removeScrim(s.id); }, 'ghost');
     actions.appendChild(del);
@@ -322,7 +322,8 @@ function renderScrims(){
     // if finalized, show brief results summary and a view button
     if(s.state==='Finalizado' && s.results){
       const mvpFriendly = getParticipantDisplayName(s, s.results.mvp);
-      const sum = document.createElement('div'); sum.style.marginTop='8px'; sum.style.fontSize='13px'; sum.style.fontWeight='600'; sum.textContent = 'Resultado: ' + (s.results.winner || '') + (s.results.mvp?(' • MVP: '+mvpFriendly):'');
+  const mvpRankSummary = getParticipantRanking(s, s.results.mvp) || '';
+  const sum = document.createElement('div'); sum.style.marginTop='8px'; sum.style.fontSize='13px'; sum.style.fontWeight='600'; sum.textContent = 'Resultado: ' + (s.results.winner || '') + (s.results.mvp?(' • MVP: '+mvpFriendly + (mvpRankSummary?(' • '+mvpRankSummary):'')):'');
       left.appendChild(sum);
       const view = createActionBtn('Ver resultados', ()=> showResultsDetail(s),'ghost'); view.style.marginTop='6px'; left.appendChild(view);
     }
@@ -341,15 +342,13 @@ function showResultsDetail(s){
   const area = document.getElementById('resultsArea'); if(!area) return;
   if(!s || !s.results){ area.innerHTML = 'No hay resultados para esta partida.'; return; }
   const r = s.results;
-  // prefer friendly display for MVP (map bot ids to per-scrim display names)
-  const mvpDisplay = getParticipantDisplayName(s, r.mvp || '');
-  area.innerHTML = `<div style="font-weight:700">Resultados — ${escapeHtml(s.title||s.id)}</div>
-    <div style="margin-top:8px">Ganador: <b>${escapeHtml(r.winner||'')}</b></div>
-    <div>MVP: ${escapeHtml(mvpDisplay||'')}</div>
-    <div>Kills/Assists: ${escapeHtml(r.kills||'')}</div>
-    <div>Rating: ${escapeHtml(r.rating||'')}</div>
-    <div style="margin-top:8px">Notas: ${escapeHtml(r.notes||'')}</div>
-    <div style="margin-top:10px;color:var(--muted);font-size:12px">Registrado por: ${escapeHtml(r.recordedBy||'system')} — ${new Date(r.time||Date.now()).toLocaleString()}</div>`;
+    const mvpDisplay = getParticipantDisplayName(s, r.mvp || '');
+    const mvpRank = getParticipantRanking(s, r.mvp) || '';
+    area.innerHTML = `<div style="font-weight:700">Resultados — ${escapeHtml(s.title||s.id)}</div>
+      <div style="margin-top:8px">Ganador: <b>${escapeHtml(r.winner||'')}</b></div>
+      <div>MVP: ${escapeHtml(mvpDisplay||'')}${mvpRank?(' • '+escapeHtml(mvpRank)) : ''}</div>
+      <div>Kills/Assists: ${escapeHtml(r.kills||'')}</div>
+    <div>Ranking: ${escapeHtml(r.rating||'')}</div>`;
 }
 
 function createActionBtn(text, handler, kind='primary'){
@@ -380,7 +379,7 @@ function showResultsForm(scrim){
   f.innerHTML = `<label>Ganador (equipo)</label><input id="resWinner" placeholder="Equipo A / Equipo B" />
     <label>MVP</label><input id="resMVP" placeholder="Jugador destacado" />
     <label>Kills / Assists</label><input id="resKills" placeholder="ej. 12/8" />
-    <label>Rating (1-5)</label><select id="resRating"><option value="">(sin rating)</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+  <label>Ranking (1-5)</label><select id="resRating"><option value="">(sin ranking)</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
     <label>Comentarios</label><textarea id="resNotes" rows="3"></textarea>
     <div class="submit-row"><button id="resSubmit" class="btn primary">Guardar</button><button id="resClear" class="btn ghost">Cancelar</button></div>`;
   area.appendChild(f);
