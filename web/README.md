@@ -21,5 +21,5 @@ Cómo usar:
 2. Abrir http://localhost:8080 en el navegador.
 
 Notas:
-- Esta implementación expone una API y ejecuta la simulación del `Main` en el servidor; la salida de consola se captura y se muestra en el frontend al ejecutar la acción "Ejecutar simulación (server)".
+- Esta implementación expone una API y puede ejecutar acciones de demostración en el servidor; la UI ya no muestra un botón para "Ejecutar simulación (server)" por defecto.
 - Sigue siendo para uso local/educativo. No usar en producción.

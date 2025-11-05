@@ -7,20 +7,22 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main class="app">
-    <div class="card">
-      <div id="topControls" style="position:absolute; right:16px; top:12px; display:flex; align-items:center; gap:8px;">
-        <img id="avatarImg" src="" alt="avatar" style="width:36px;height:36px;border-radius:50%;display:none;object-fit:cover;border:2px solid rgba(255,255,255,0.12);" />
-        <div id="topUserLabel" style="color:white;font-weight:700;display:none;">User</div>
-        <button id="topLogoutBtn" class="btn danger" style="display:none;">Cerrar sesión</button>
-      </div>
-      <div class="brand">
+  <div id="topControls" class="hidden">
+    <img id="avatarImg" src="" alt="avatar" />
+    <div id="topUserLabel">User</div>
+    <button id="topLogoutBtn" class="btn danger">Cerrar sesión</button>
+  </div>
+  <div id="pageContainer">
+    <main class="app">
+      <div class="card">
+  <div class="brand">
   <!-- main avatar (static placeholder - gamer style via DiceBear) -->
   <img id="mainAvatar" class="logo" src="https://api.dicebear.com/7.x/bottts/svg?seed=eScrims" alt="avatar" />
         <h1>eScrims</h1>
         <p class="subtitle">Encuentra tu equipo. Juega mejor.</p>
   <!-- topControls moved outside brand by script/patch to ensure visibility -->
-      </div>
+  </div>
+
 
       <div class="forms">
         <form id="loginForm" class="form active" autocomplete="off">
@@ -67,10 +69,6 @@
 
         <section id="appArea" class="app-area hidden">
           <h2>Bienvenido, <span id="userLabel"></span></h2>
-          <p>Has iniciado sesión con éxito en modo local (localStorage).</p>
-          <div class="actions">
-            <button id="logoutBtn" class="btn danger">Cerrar sesión</button>
-          </div>
 
           <div class="profile card small" style="margin-top:12px;">
             <h3>Preferencias</h3>
@@ -88,8 +86,6 @@
               </div>
               <div class="actions"><button id="savePrefs" class="btn primary">Guardar preferencias</button></div>
           </div>
-
-          <hr />
 
           <section class="scrim-area">
             <div class="scrim-creator card small">
@@ -140,10 +136,7 @@
                   <input id="scrimLatency" type="number" min="0" value="100" />
                 </div>
               </div>
-              <div class="field">
-                <label for="scrimReminder">Recordatorio (horas antes)</label>
-                <input id="scrimReminder" type="number" min="0" placeholder="(usar preferencia)" />
-              </div>
+              <!-- removed Recordatorio field per UX request -->
               <div class="actions">
                 <button id="createScrimBtn" class="btn primary">Crear</button>
               </div>
@@ -165,10 +158,10 @@
               <div id="resultsArea" style="margin-top:8px">Seleccioná un scrim finalizado para cargar resultados.</div>
             </div>
           </section>
-        </section>
-      </div>
-    </div>
-  </main>
+          </section>
+        </div> <!-- .card -->
+      </main> <!-- .app -->
+    </div> <!-- #pageContainer -->
   <script src="app.js"></script>
 </body>
 </html>

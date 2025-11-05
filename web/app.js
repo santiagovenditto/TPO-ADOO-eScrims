@@ -41,7 +41,8 @@ function setLogged(username, token){
   }
   if(topUserLabel) { topUserLabel.textContent = username; topUserLabel.style.display='inline-block'; }
   // ensure the top controls container is visible
-  const topControls = document.getElementById('topControls'); if(topControls) topControls.style.display='flex';
+  // (we use the 'hidden' class to toggle visibility so CSS controls layout)
+  const topControls = document.getElementById('topControls'); if(topControls) topControls.classList.remove('hidden');
   // also replace main avatar with a themed avatar based on user
   const main = document.getElementById('mainAvatar'); if(main) main.src = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+encodeURIComponent(username);
   // apply saved preferences (or defaults) to UI for this user
@@ -72,8 +73,8 @@ function logout(){
   // Clear UI session and show login form. Also ensure SPA navigates to root so any internal state resets.
   // show login form in SPA
   showForm('login');
-  // hide top controls and avatar
-  if(topLogoutBtn) topLogoutBtn.style.display = 'none';
+  // hide top controls and avatar by adding hidden class
+  const topControls = document.getElementById('topControls'); if(topControls) topControls.classList.add('hidden');
   if(avatarImg) { avatarImg.style.display='none'; avatarImg.src=''; }
   const main = document.getElementById('mainAvatar'); if(main) main.src = 'https://api.dicebear.com/7.x/bottts/svg?seed=eScrims';
   if(topUserLabel) { topUserLabel.style.display='none'; topUserLabel.textContent=''; }
@@ -128,21 +129,8 @@ loginForm.addEventListener('submit', async e =>{
   }catch(err){ loginNotice.textContent='Error de red'; }
 });
 
-logoutBtn.addEventListener('click', ()=>{ logout(); });
+if(logoutBtn) logoutBtn.addEventListener('click', ()=>{ logout(); });
 if(topLogoutBtn) topLogoutBtn.addEventListener('click', ()=>{ logout(); });
-
-// run simulation button in app area
-const runBtn = document.createElement('button'); runBtn.className='btn ghost'; runBtn.textContent='Ejecutar simulación (server)';
-runBtn.addEventListener('click', async ()=>{
-  simOutput.textContent = 'Ejecutando...';
-  const s = getSession();
-  if(!s || !s.token){ simOutput.textContent = 'No estás autenticado.'; return; }
-  try{
-    const j = await postJson('/run', {token: s.token});
-    if(j.ok){ simOutput.textContent = j.output || '(sin salida)'; } else { simOutput.textContent = j.message || 'Error'; }
-  }catch(e){ simOutput.textContent = 'Error de red'; }
-});
-$('appArea').querySelector('.actions').appendChild(runBtn);
 
 // small UX: focus first input on show
 document.addEventListener('click', ()=>{ const f = document.querySelector('.form.active input'); if(f) f.focus(); });

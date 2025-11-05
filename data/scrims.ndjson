@@ -1,2 +1,4 @@
 {"id":"s_test_sync","title":"sync test updated","format":"5v5","region":"test","owner":"testuser","state":"Buscando","created":1762289999999,"playersPerSide":5,"date":null,"mode":"Ranked-like","minMMR":null,"maxMMR":null,"latency":100,"participants":["alice","bob","carol","anon"],"confirmations":{},"strategy":"ByMMR","rolesRequired":[],"waitlist":[],"results":null}
 {"id":"e04736df-21cb-4842-b263-0e3c0da78a1b","format":"5v5","start":"2025-11-05T08:12:00.712248","state":"Confirmado"}
+{"id":"e51ee67e-a828-4f82-8fbe-12c93cb047af","format":"5v5","start":"2025-11-05T08:40:34.938753","state":"Confirmado"}
+{"id":"494058c8-7941-4d7c-bf67-d958fb756a95","format":"5v5","start":"2025-11-05T08:43:23.266753","state":"Confirmado"}
