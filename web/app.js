@@ -206,6 +206,16 @@ function renderScrims(){
       const rBadge = document.createElement('div'); rBadge.className = 'badge reminder-badge'; rBadge.textContent = s.reminderHours + 'h'; right.appendChild(rBadge);
     }
     const actions = document.createElement('div'); actions.className='scrim-actions';
+    // helper to create more menu
+    function createMoreMenu(extraBtns){
+      const wrap = document.createElement('div'); wrap.style.position='relative';
+      const more = document.createElement('button'); more.className='btn ghost'; more.textContent='⋯'; more.title='Más acciones'; more.style.padding='8px 10px';
+      const menu = document.createElement('div'); menu.style.position='absolute'; menu.style.right='0'; menu.style.top='36px'; menu.style.background='var(--card)'; menu.style.border='1px solid rgba(255,255,255,0.03)'; menu.style.padding='8px'; menu.style.borderRadius='8px'; menu.style.display='none'; menu.style.zIndex='50'; menu.style.minWidth='160px';
+      extraBtns.forEach(b=>{ const r = document.createElement('div'); r.style.marginBottom='6px'; const cb = b.cloneNode(true); cb.style.display='block'; cb.style.width='100%'; r.appendChild(cb); menu.appendChild(r); });
+      more.addEventListener('click', (ev)=>{ ev.stopPropagation(); menu.style.display = menu.style.display==='none' ? 'block' : 'none'; });
+      document.addEventListener('click', ()=>{ menu.style.display='none'; });
+      wrap.appendChild(more); wrap.appendChild(menu); return wrap;
+    }
     // participant info and actions
     const sCapacity = (s.playersPerSide||5) * 2;
     const partInfo = document.createElement('div'); partInfo.style.fontSize='12px'; partInfo.style.color='var(--muted)';
@@ -628,7 +638,7 @@ function escapeHtml(s){ return (s+'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'
 
 // named handler so we can call it from delegated listeners if needed
 async function handleCreateScrim(){
-  try{ window.handleCreateScrim = handleCreateScrim; }catch(e){}
+  // NOTE: window handle is assigned once below (outside) to avoid repeated rebindings
   const title = $('scrimTitle').value.trim() || 'Scrim';
   const format = $('scrimFormat').value;
   const region = $('scrimRegion').value.trim() || 'Any';
@@ -678,25 +688,36 @@ async function handleCreateScrim(){
           try{
             const serverList = await (await fetch(API + '/scrims')).json().catch(()=>null);
             if(Array.isArray(serverList)){
-              // merge: ensure created is present and prefer server objects for others
               try{
-                const exists = serverList.some(x=> x && x.id && created && created.id && x.id===created.id);
-                if(!exists) serverList.unshift(created);
-              }catch(e){}
-              // also merge any optimistic saved scrims (persisted temporarily) to avoid losing them
-              try{
-                for(let i=0;i<localStorage.length;i++){
-                  const k = localStorage.key(i);
-                  if(k && k.startsWith && k.startsWith('optimistic_')){
-                    try{ const o = JSON.parse(localStorage.getItem(k)||'null'); if(o && o.id){ if(!serverList.some(x=>x && x.id===o.id)) serverList.unshift(o); } }catch(e){}
+                // Merge strategy: preserve any local/optimistic items and prefer server objects when ids match.
+                const localList = loadScrims();
+                const serverMap = {};
+                serverList.forEach(it=>{ if(it && it.id) serverMap[it.id] = it; });
+                const merged = [];
+                // keep local order but replace items with server version when available
+                (localList||[]).forEach(it=>{
+                  if(it && it.id && serverMap[it.id]) merged.push(serverMap[it.id]);
+                  else merged.push(it);
+                });
+                // append any server items not already present
+                serverList.forEach(it=>{ if(it && it.id && !(merged.some(m=>m && m.id===it.id))) merged.push(it); });
+                // ensure created is present (fallback)
+                try{ if(created && created.id && !merged.some(m=>m && m.id===created.id)) merged.unshift(created); }catch(e){}
+                // also merge any optimistic saved scrims (persisted temporarily) to avoid losing them
+                try{
+                  for(let i=0;i<localStorage.length;i++){
+                    const k = localStorage.key(i);
+                    if(k && k.startsWith && k.startsWith('optimistic_')){
+                      try{ const o = JSON.parse(localStorage.getItem(k)||'null'); if(o && o.id){ if(!merged.some(x=>x && x.id===o.id)) merged.unshift(o); } }catch(e){}
+                    }
                   }
-                }
-              }catch(e){}
-              saveScrims(serverList);
-              // clear optimistic entry for created id (server acknowledged) if present
-              try{ if(created && created.id) localStorage.removeItem('optimistic_'+created.id); }catch(e){}
-              console.log('handleCreateScrim: reconciled with server list, count=', serverList.length);
-              try{ renderScrims(); }catch(e){}
+                }catch(e){}
+                saveScrims(merged);
+                // clear optimistic entry for created id (server acknowledged) if present
+                try{ if(created && created.id) localStorage.removeItem('optimistic_'+created.id); }catch(e){}
+                console.log('handleCreateScrim: reconciled with server list, merged count=', merged.length);
+                try{ renderScrims(); }catch(e){}
+              }catch(e){ console.error('handleCreateScrim: delayed reconcile failed', e); }
             }
           }catch(e){ console.error('handleCreateScrim: delayed reconcile failed', e); }
         }, 900);
@@ -710,12 +731,17 @@ async function handleCreateScrim(){
   $('scrimTitle').value=''; $('scrimRegion').value='';
 }
 
-// attach normally if element exists
-if (createScrimBtn) createScrimBtn.addEventListener('click', handleCreateScrim);
-// fallback: delegated listener in case direct binding didn't run due to timing
-document.addEventListener('click', (ev)=>{
-  try{ if(ev.target && ev.target.id==='createScrimBtn'){ handleCreateScrim(); } }catch(e){}
-});
+// expose handler on window so external delegates can call it (assigned once)
+try{ window.handleCreateScrim = handleCreateScrim; }catch(e){}
+// attach normally if element exists; fallback to delegated listener only if the element is not present
+if (createScrimBtn) {
+  createScrimBtn.addEventListener('click', handleCreateScrim);
+} else {
+  // fallback: delegated listener in case the button is added later to the DOM
+  document.addEventListener('click', (ev)=>{
+    try{ if(ev.target && ev.target.id==='createScrimBtn'){ handleCreateScrim(); } }catch(e){}
+  });
+}
 
 // initial render when app area shown
 document.addEventListener('DOMContentLoaded', async ()=>{ await refreshScrimsFromServer(); renderScrims(); });

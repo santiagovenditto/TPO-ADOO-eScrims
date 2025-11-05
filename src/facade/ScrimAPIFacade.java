@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * Simple facade that exposes high-level operations on scrims.
@@ -34,10 +33,18 @@ public class ScrimAPIFacade {
         try { s.setRegion(region); } catch (Exception ignored) {}
         try { s.setFechaHora(fechaHora); } catch (Exception ignored) {}
 
-        // persist minimal JSON object to scrims.ndjson
-        String id = s.getId().toString();
-        String start = (fechaHora==null)?"null":fechaHora.toString();
-        String json = String.format("{\"id\":\"%s\",\"title\":\"%s\",\"format\":\"%s\",\"region\":\"%s\",\"owner\":\"%s\",\"state\":\"Buscando\",\"start\":%s}", id, escape(title), escape(format), escape(region), escape(owner), (start.equals("null")?"null\"":"\""+start+"\""));
+    // persist minimal JSON object to scrims.ndjson
+    String id = s.getId().toString();
+    String start = (fechaHora==null) ? null : fechaHora.toString();
+    long createdTs = System.currentTimeMillis();
+    String startJson = (start==null) ? "null" : ("\"" + escape(start) + "\"");
+    // produce a richer object that the frontend expects
+    // date is stored as milliseconds since epoch if available, otherwise null
+    String dateJson = (fechaHora==null) ? "null" : String.valueOf(fechaHora.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli());
+    String json = String.format(
+        "{\\\"id\\\":\\\"%s\\\",\\\"title\\\":\\\"%s\\\",\\\"format\\\":\\\"%s\\\",\\\"region\\\":\\\"%s\\\",\\\"owner\\\":\\\"%s\\\",\\\"state\\\":\\\"Buscando\\\",\\\"start\\\":%s,\\\"date\\\":%s,\\\"created\\\":%d,\\\"playersPerSide\\\":5,\\\"participants\\\":[],\\\"confirmations\\\":{},\\\"strategy\\\":\\\"ByMMR\\\",\\\"mode\\\":\\\"Ranked-like\\\",\\\"latency\\\":100}",
+        id, escape(title), escape(format), escape(region), escape(owner), startJson, dateJson, createdTs
+    );
         appendNdjson("scrims.ndjson", json);
         return s;
     }
