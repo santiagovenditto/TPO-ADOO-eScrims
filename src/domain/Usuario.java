@@ -13,6 +13,7 @@ public class Usuario {
     private String region;
     private Map<String, String> rangoPorJuego; // Ej: <"Valorant", "Diamante">
     private List<String> rolesPreferidos;  // Ej: ["Duelist", "Support"]
+    private Integer ranking; // valor numérico para emparejamiento (antes llamado MMR)
 
     
     public Usuario() {
@@ -69,6 +70,14 @@ public class Usuario {
 
     public void setRolesPreferidos(List<String> rolesPreferidos) {
         this.rolesPreferidos = rolesPreferidos;
+    }
+
+    public Integer getRanking() {
+        return ranking;
+    }
+
+    public void setRanking(Integer ranking) {
+        this.ranking = ranking;
     }
 
     @Override

@@ -32,9 +32,11 @@ public class ByMMRStrategy implements MatchmakingStrategy {
     private int simulateMmr(Usuario u, Random rnd){
         try{
             if(u==null) return 1000 + rnd.nextInt(800);
+            // prefer explicit ranking if set on Usuario
+            try{ Integer r = u.getRanking(); if(r!=null) return r.intValue(); }catch(Exception ex){}
             String name = u.getUsername(); if(name==null || name.trim().isEmpty()) return 1000 + rnd.nextInt(800);
             int h = Math.abs(name.hashCode());
-            return 800 + (h % 2000); // mmr in 800..2799
+            return 800 + (h % 2000); // ranking in 800..2799
         }catch(Exception e){ return 1000 + rnd.nextInt(800); }
     }
 }
