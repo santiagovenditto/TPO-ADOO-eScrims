@@ -60,6 +60,8 @@ small{color:var(--muted)}
 #topUserLabel{font-size:14px;color:var(--text);margin-right:6px}
 #avatarImg{box-shadow:0 2px 8px rgba(2,6,23,0.5)}
 
+#topControls{z-index:40}
+
 /* Scrim UI */
 .scrim-area{display:flex;gap:16px;margin-top:18px;align-items:flex-start}
 .card.small{padding:16px;border-radius:12px;flex:1;display:flex;flex-direction:column}

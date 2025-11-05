@@ -40,6 +40,8 @@ function setLogged(username, token){
     avatarImg.style.display = 'inline-block';
   }
   if(topUserLabel) { topUserLabel.textContent = username; topUserLabel.style.display='inline-block'; }
+  // ensure the top controls container is visible
+  const topControls = document.getElementById('topControls'); if(topControls) topControls.style.display='flex';
   // also replace main avatar with a themed avatar based on user
   const main = document.getElementById('mainAvatar'); if(main) main.src = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+encodeURIComponent(username);
   // apply saved preferences (or defaults) to UI for this user
