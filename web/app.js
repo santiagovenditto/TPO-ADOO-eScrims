@@ -299,7 +299,7 @@ function renderScrims(){
       const adv = createActionBtn('Avanzar estado', ()=>advanceStateSimulation(s.id)); adv.className = 'btn ghost'; actions.appendChild(adv);
     }
   // owner quick controls to simulate start and finish
-  if(me===s.owner){ const bs = createActionBtn('Simular inicio', ()=>simulateStart(s.id)); actions.appendChild(bs); const bf = createActionBtn('Simular fin', ()=>simulateFinish(s.id)); actions.appendChild(bf); }
+  // removed per UX request: do not show Simular inicio / Simular fin buttons to owner
     // cancel available for owner
     if(me===s.owner && s.state!=='Finalizado'){
       const c = createActionBtn('Cancelar', ()=>{ if(confirm('Cancelar scrim?')) changeState(s.id,'Cancelado'); }, 'ghost'); actions.appendChild(c);
@@ -314,7 +314,8 @@ function renderScrims(){
   if(s.waitlist && s.waitlist.length>0){ const wl=document.createElement('div'); wl.style.fontSize='12px'; wl.style.color='var(--muted)'; wl.textContent = 'Suplentes: '+s.waitlist.length; left.appendChild(wl); }
     // if finalized, show brief results summary and a view button
     if(s.state==='Finalizado' && s.results){
-      const sum = document.createElement('div'); sum.style.marginTop='8px'; sum.style.fontSize='13px'; sum.style.fontWeight='600'; sum.textContent = 'Resultado: ' + (s.results.winner || '') + (s.results.mvp?(' • MVP: '+s.results.mvp):'');
+      const mvpFriendly = getParticipantDisplayName(s, s.results.mvp);
+      const sum = document.createElement('div'); sum.style.marginTop='8px'; sum.style.fontSize='13px'; sum.style.fontWeight='600'; sum.textContent = 'Resultado: ' + (s.results.winner || '') + (s.results.mvp?(' • MVP: '+mvpFriendly):'');
       left.appendChild(sum);
       const view = createActionBtn('Ver resultados', ()=> showResultsDetail(s),'ghost'); view.style.marginTop='6px'; left.appendChild(view);
     }
@@ -333,9 +334,11 @@ function showResultsDetail(s){
   const area = document.getElementById('resultsArea'); if(!area) return;
   if(!s || !s.results){ area.innerHTML = 'No hay resultados para esta partida.'; return; }
   const r = s.results;
+  // prefer friendly display for MVP (map bot ids to per-scrim display names)
+  const mvpDisplay = getParticipantDisplayName(s, r.mvp || '');
   area.innerHTML = `<div style="font-weight:700">Resultados — ${escapeHtml(s.title||s.id)}</div>
     <div style="margin-top:8px">Ganador: <b>${escapeHtml(r.winner||'')}</b></div>
-    <div>MVP: ${escapeHtml(r.mvp||'')}</div>
+    <div>MVP: ${escapeHtml(mvpDisplay||'')}</div>
     <div>Kills/Assists: ${escapeHtml(r.kills||'')}</div>
     <div>Rating: ${escapeHtml(r.rating||'')}</div>
     <div style="margin-top:8px">Notas: ${escapeHtml(r.notes||'')}</div>
@@ -651,6 +654,22 @@ async function removeScrim(id){
 }
 
 function escapeHtml(s){ return (s+'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// Return the friendly display name for a participant id within a scrim
+function getParticipantDisplayName(scrim, participantId){
+  try{
+    if(!participantId) return '';
+    const all = loadScrims(); const local = (all||[]).find(x=>x && x.id===scrim.id) || scrim;
+    if(local && local.participantNames && local.participantNames[participantId]) return local.participantNames[participantId];
+    // if not found and it's a bot id, try to map quickly to a truncated friendly name
+    if(participantId && participantId.startsWith && participantId.startsWith('bot_')){
+      // fallback: show 'Jugador <suffix>' where suffix is last digits
+      const m = participantId.match(/_(\d+)$/);
+      return m? ('Jugador ' + (m[1].slice(-2)||m[1])) : participantId;
+    }
+    return participantId;
+  }catch(e){ return participantId || ''; }
+}
 
 // named handler so we can call it from delegated listeners if needed
 async function handleCreateScrim(){
