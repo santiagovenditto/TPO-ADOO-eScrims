@@ -242,7 +242,7 @@ function renderScrims(){
         if(p && p.startsWith && p.startsWith('bot_')){
           name.className='bot-name';
           let display = localScrim.participantNames[p];
-          if(!display){ display = 'Usuario ' + (nextUserIndex++); localScrim.participantNames[p] = display; }
+          if(!display){ display = 'Jugador ' + (nextUserIndex++); localScrim.participantNames[p] = display; }
           name.textContent = display;
           // attach small hover metadata if available
           try{ const meta = JSON.parse(localStorage.getItem('bot_meta_'+p) || 'null'); if(meta){ name.title = 'Role: '+(meta.role||'n/a')+' • MMR: '+(meta.mmr||'n/a')+' • '+(meta.latency||'?')+'ms'; } }catch(e){}
