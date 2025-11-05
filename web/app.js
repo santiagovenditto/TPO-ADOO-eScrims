@@ -245,11 +245,18 @@ function renderScrims(){
           if(!display){ display = 'Jugador ' + (nextUserIndex++); localScrim.participantNames[p] = display; }
           name.textContent = display;
           // attach small hover metadata if available
-          try{ const meta = JSON.parse(localStorage.getItem('bot_meta_'+p) || 'null'); if(meta){ name.title = 'Role: '+(meta.role||'n/a')+' • MMR: '+(meta.mmr||'n/a')+' • '+(meta.latency||'?')+'ms'; } }catch(e){}
+          let meta = null; try{ meta = JSON.parse(localStorage.getItem('bot_meta_'+p) || 'null'); }catch(e){ meta = null; }
+          if(meta){ name.title = 'Role: '+(meta.role||'n/a')+' • Ranking: '+(meta.mmr||'n/a')+' • '+(meta.latency||'?')+'ms'; }
           item.appendChild(name);
+          // append ranking display if available
+          const rankingVal = getParticipantRanking(localScrim, p) || (meta && meta.mmr);
+          if(rankingVal){ const rs = document.createElement('span'); rs.className='bot-mmr'; rs.textContent = ' • '+rankingVal; rs.style.marginLeft='8px'; rs.style.fontSize='12px'; rs.style.opacity='0.9'; item.appendChild(rs); }
         } else {
           name.textContent = p;
           item.appendChild(name);
+          // show ranking for real users if we have it cached locally
+          const userRank = getParticipantRanking(localScrim, p);
+          if(userRank){ const rs = document.createElement('span'); rs.className='bot-mmr'; rs.textContent = ' • '+userRank; rs.style.marginLeft='8px'; rs.style.fontSize='12px'; rs.style.opacity='0.9'; item.appendChild(rs); }
         }
   // strikes count
   const strikes = JSON.parse(localStorage.getItem('strikes_'+p)||'[]').length;
@@ -436,7 +443,7 @@ async function reportPlayer(player, reason, reporter){
   const r = { id: 'r_'+Date.now(), reported: player, reason: reason||'', by: reporter||'anon', time: Date.now() };
   try{
     await fetch(API + '/report', {method:'POST', body: JSON.stringify(r), headers:{'Content-Type':'application/json'}});
-    pushNotif('Reporte enviado al servidor para '+player);
+    pushNotif('Reporte enviado al servidor para '+getFallbackDisplayName(player));
     // refresh UI (server may have applied ban)
     await refreshScrimsFromServer(); renderScrims();
     return;
@@ -640,7 +647,7 @@ function generateResultsForScrim(s){
     const notes = 'Resultados generados automáticamente';
   // moderation removed: results stored directly on scrim (no moderation queue)
     // push notification summary
-    try{ pushNotif('Resultados generados para "'+(s.title||s.id)+'" — '+mvp+' ('+kills+')'); }catch(e){}
+  try{ pushNotif('Resultados generados para "'+(s.title||s.id)+'" — '+getParticipantDisplayName(s,mvp)+' ('+kills+')'); }catch(e){}
     return { winner, notes, mvp, kills, rating, recordedBy: 'system', time: Date.now() };
   }catch(e){ return { winner: 'Equipo A', notes: 'Simulación automática', recordedBy: 'system', time: Date.now() }; }
 }
@@ -669,6 +676,22 @@ function getParticipantDisplayName(scrim, participantId){
     }
     return participantId;
   }catch(e){ return participantId || ''; }
+}
+
+function getParticipantRanking(scrim, participantId){
+  try{
+    if(!participantId) return null;
+    const meta = JSON.parse(localStorage.getItem('bot_meta_'+participantId) || 'null');
+    if(meta && meta.mmr) return meta.mmr;
+    // try to read from scrim participantNames mapping if we stored ranking there
+    const all = loadScrims(); const local = (all||[]).find(x=>x && x.id===scrim.id) || scrim;
+    if(local && local.participantRanks && local.participantRanks[participantId]) return local.participantRanks[participantId];
+    return null;
+  }catch(e){ return null; }
+}
+
+function getFallbackDisplayName(participantId){
+  try{ if(!participantId) return ''; if(participantId.startsWith && participantId.startsWith('bot_')) return 'Jugador'; return participantId; }catch(e){ return participantId||''; }
 }
 
 // named handler so we can call it from delegated listeners if needed
