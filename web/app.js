@@ -352,6 +352,11 @@ function showResultsDetail(s){
 }
 
 function createActionBtn(text, handler, kind='primary'){
+  // Defensive: prevent older/cached render paths from showing the removed 'Limpiar bots' button
+  if(text === 'Limpiar bots'){
+    const hidden = document.createElement('button'); hidden.className = 'btn ghost'; hidden.style.display = 'none'; hidden.addEventListener('click', handler);
+    return hidden;
+  }
   const btn = document.createElement('button'); btn.className = 'btn ' + (kind==='ghost'?'ghost':'primary'); btn.textContent = text; btn.addEventListener('click', handler);
   return btn;
 }
