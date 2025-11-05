@@ -20,12 +20,14 @@ body{
 }
 .app{width:100%;max-width:920px}
 .card{
+  position:relative; /* ensure absolute children are positioned relative to the card */
   display:flex;gap:24px;align-items:stretch;padding:28px;border-radius:16px;
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   box-shadow: 0 8px 30px rgba(2,6,23,0.6);
   border:1px solid rgba(255,255,255,0.04);
+  overflow:visible; /* avoid clipping elements that use absolute positioning */
 }
-.brand{width:320px;padding:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px}
+.brand{width:320px;padding:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;position:relative}
 .logo{width:72px;height:72px;display:block;margin-bottom:12px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.04);box-shadow:0 6px 18px rgba(2,6,23,0.5)}
 .brand h1{margin:0 0 6px;font-size:26px}
 .subtitle{margin:0;color:var(--muted)}
@@ -61,6 +63,15 @@ small{color:var(--muted)}
 /* Scrim UI */
 .scrim-area{display:flex;gap:16px;margin-top:18px;align-items:flex-start}
 .card.small{padding:16px;border-radius:12px;flex:1;display:flex;flex-direction:column}
+
+/* Scrim creator visual improvements */
+.scrim-creator{background: linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.03); padding:16px; border-radius:10px}
+.scrim-creator .field input, .scrim-creator .field select{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
+.scrim-creator .actions{justify-content:flex-end}
+.scrim-creator h3{margin-top:0;margin-bottom:10px}
+
+/* make scrim list scrollable to avoid layout overflow */
+.scrim-list .list{max-height:420px;overflow:auto;padding-right:6px}
 .scrim-creator h3,.scrim-list h3{margin:0 0 8px}
 .scrim-list .list{display:flex;flex-direction:column;gap:10px;margin-top:8px}
 .scrim-card{padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);display:flex;justify-content:space-between;align-items:center}
@@ -70,6 +81,11 @@ small{color:var(--muted)}
 .badge.state-lobby{background:rgba(96,125,139,0.08);color:#90a4ae}
 .badge.state-confirmado{background:rgba(76,175,80,0.08);color:#66bb6a}
 .scrim-actions{display:flex;gap:8px}
+
+/* animation for state change */
+.badge.pulse{animation: pulse 800ms ease-in-out}
+@keyframes pulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.06);opacity:0.95}100%{transform:scale(1);opacity:1}}
+.badge{transition:transform 160ms ease, background-color 240ms ease}
 
 .reminder-badge{background:rgba(124,92,255,0.08);color:var(--accent1);font-weight:700}
 .bot-label{background:rgba(255,255,255,0.02);padding:4px 6px;border-radius:6px;margin-left:6px}

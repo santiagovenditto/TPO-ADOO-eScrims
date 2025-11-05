@@ -268,6 +268,10 @@ function renderScrims(){
     if(s.state==='EnJuego'){
       if(me===s.owner){ const b = createActionBtn('Finalizar', ()=>changeState(s.id,'Finalizado')); actions.appendChild(b); }
     }
+    // add an advance-state simulation button for quick testing (visible to everyone)
+    {
+      const adv = createActionBtn('Avanzar estado', ()=>advanceStateSimulation(s.id)); adv.className = 'btn ghost'; actions.appendChild(adv);
+    }
   // owner quick controls to simulate start and finish
   if(me===s.owner){ const bs = createActionBtn('Simular inicio', ()=>simulateStart(s.id)); actions.appendChild(bs); const bf = createActionBtn('Simular fin', ()=>simulateFinish(s.id)); actions.appendChild(bf); }
     // cancel available for owner
@@ -410,6 +414,46 @@ function changeState(id, to){
   const s = arr.find(x=>x.id===id); if(!s) return;
   s.state = to; saveScrims(arr); renderScrims();
   try{ syncScrimToServer(s).catch(()=>{}); }catch(e){}
+  try{ notifyStateChange(id, to); }catch(e){}
+}
+
+// Advance the scrim state in a predefined flow for simulation/testing
+function advanceStateSimulation(id){
+  const arr = loadScrims(); const s = arr.find(x=>x.id===id); if(!s) return;
+  const flow = ['Buscando','LobbyArmado','Confirmado','EnJuego','Finalizado'];
+  const idx = flow.indexOf(s.state);
+  const next = (idx===-1 || idx===flow.length-1) ? flow[0] : flow[idx+1];
+  // if moving to LobbyArmado and capacity not full, fill with bots
+  if(next==='LobbyArmado'){
+    // fill with bots until capacity
+    const cap = (s.playersPerSide||5)*2;
+    let i=0; while(s.participants.length<cap){ const botId = 'bot_'+Date.now()+'_'+(i++); s.participants.push(botId); try{ localStorage.setItem('bot_meta_'+botId, JSON.stringify({role:'R', mmr:1000, latency:80})); }catch(e){} }
+  }
+  // if moving to Confirmado, mark confirmations for all participants
+  if(next==='Confirmado'){
+    s.participants.forEach(p=> s.confirmations[p]=true);
+    // set scrim date to now+5s to test auto-start
+    if(!s.date) s.date = new Date(Date.now()+5000).toISOString();
+  }
+  s.state = next; saveScrims(arr); renderScrims(); try{ syncScrimToServer(s).catch(()=>{}); }catch(e){}
+  try{ notifyStateChange(id, next); }catch(e){}
+}
+
+// small helper to animate badge and push a notification
+function notifyStateChange(id, newState){
+  pushNotif('Scrim '+id+' cambió a '+newState);
+  // attempt to add pulse class to the visible badge for this scrim in DOM
+  try{
+    const cards = document.querySelectorAll('.scrim-card');
+    cards.forEach(c=>{
+      const b = c.querySelector('.badge');
+      if(!b) return;
+      // find matching card by title/id heuristic: check text inside
+      if(c.innerText.includes(id) || c.innerText.includes(newState) || c.querySelector('div')?.innerText?.includes(id)){
+        b.classList.add('pulse'); setTimeout(()=>b.classList.remove('pulse'),900);
+      }
+    });
+  }catch(e){}
 }
 
 function postular(id, user){
