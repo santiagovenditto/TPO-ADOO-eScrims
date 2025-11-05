@@ -28,6 +28,7 @@ body{
   overflow:visible; /* avoid clipping elements that use absolute positioning */
 }
 .brand{width:320px;padding:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;position:relative}
+.card{min-height:420px}
 .logo{width:72px;height:72px;display:block;margin-bottom:12px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.04);box-shadow:0 6px 18px rgba(2,6,23,0.5)}
 .brand h1{margin:0 0 6px;font-size:26px}
 .subtitle{margin:0;color:var(--muted)}
@@ -44,6 +45,7 @@ body{
 .btn.danger{background:#ff5a6a;color:white}
 .notice{margin-top:12px;color:#ffcccb}
 .app-area{padding:12px}
+.app-area{overflow:auto}
 .hidden{display:none}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 /* Responsive */
