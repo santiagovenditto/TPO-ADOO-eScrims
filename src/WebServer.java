@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import auth.AuthService;
 import auth.FileAuthRepository;
+import domain.Scrim;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -39,7 +40,9 @@ public class WebServer {
         server.createContext("/api/session", new SessionHandler());
         server.createContext("/api/run", new RunHandler());
     // demo endpoint to create a confirmed scrim scheduled shortly
-    server.createContext("/api/demo", new DemoHandler());
+    // create a facade instance for use by handlers
+    facade.ScrimAPIFacade facade = new facade.ScrimAPIFacade(Paths.get(System.getProperty("user.dir"), "data"));
+    server.createContext("/api/demo", new DemoHandler(facade));
     // scrims persistence (NDJSON simple storage)
     server.createContext("/api/scrims", new ScrimsHandler());
     server.createContext("/api/scrims/delete", new ScrimDeleteHandler());
@@ -85,18 +88,17 @@ public class WebServer {
 
     // Demo handler: crea un scrim confirmado con fechaHora = now + 5s
     class DemoHandler implements HttpHandler {
+        private final facade.ScrimAPIFacade facade;
+        public DemoHandler(facade.ScrimAPIFacade facade){ this.facade = facade; }
         public void handle(HttpExchange ex) throws IOException {
             if (!ex.getRequestMethod().equalsIgnoreCase("POST")) { sendJson(ex,405,"{\"ok\":false,\"message\":\"Method not allowed\"}"); return; }
             try {
-                // crear scrim, fijar fecha
-                domain.Scrim demo = new domain.Scrim(new strategy.ByMMRStrategy());
                 java.time.LocalDateTime when = java.time.LocalDateTime.now().plusSeconds(5);
-                demo.setFechaHora(when);
-                demo.setState(new state.ConfirmadoState());
-                // persist demo scrim as minimal JSON object so it appears in the UI list
-                String scrimJson = String.format("{\"id\":\"%s\",\"format\":\"5v5\",\"start\":\"%s\",\"state\":\"Confirmado\"}", demo.getId().toString(), when.toString());
-                appendNdjson("scrims.ndjson", scrimJson);
-                String json = String.format("{\"ok\":true,\"id\":\"%s\",\"start\":\"%s\"}", demo.getId().toString(), when.toString());
+                Scrim s = facade.crearScrim("Demo Scrim","5v5","NA","demo-owner", when);
+                // mark as confirmado in-memory (so scheduler can pick it up)
+                s.setFechaHora(when);
+                s.setState(new state.ConfirmadoState());
+                String json = String.format("{\"ok\":true,\"id\":\"%s\",\"start\":\"%s\"}", s.getId().toString(), when.toString());
                 sendJson(ex,200,json);
             } catch (Exception e) { e.printStackTrace(); sendJson(ex,500,"{\"ok\":false,\"message\":\"server error\"}"); }
         }
