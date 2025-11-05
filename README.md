@@ -21,32 +21,83 @@ Arrancar manualmente
 
    java -cp out Main
 
-Arrancar solo frontend
+```markdown
+# TPO-ADOO-eScrims
 
-Si no querés ejecutar el backend, podés servir `web/` con cualquier servidor estático, por ejemplo (Python 3):
+Mini-proyecto demo: backend Java + frontend estático que permite crear y gestionar "scrims" (partidas), con persistencia simple en NDJSON y una UI ligera en `web/`.
 
-   python3 -m http.server 8080 --directory web
+Resumen rápido
+- Servidor: `Main` (Java) sirve la carpeta `web/` y expone endpoints REST en `http://localhost:9090` (o 8080 según tu configuración/local).
+- Frontend: `web/index.html`, `web/styles.css`, `web/app.js`.
 
-Endpoints útiles
-- GET / -> sirve `web/index.html`
-- POST /api/register -> registro (JSON: {username,email,password})
-- POST /api/login -> login (JSON: {email,password})
-- GET /api/session?token=... -> valida token
-- POST /api/run -> ejecuta la simulación (necesita token)
-- GET /api/scrims -> lista scrims
-- POST /api/scrims -> guarda un scrim (envía objeto JSON)
+Requisitos
+- JDK 11+ (se recomienda JDK 17)
+- Clases compiladas en `out/` (el repo incluye clases compiladas en `out/`, pero podés recompilar si necesitás).
+
+Arrancar
+- Rápido (script):
+
+```bash
+./start_server.sh
+```
+
+- Manual (si ya compilaste):
+
+```bash
+java -cp out Main
+```
+
+Frontend solo (sin backend):
+
+```bash
+python3 -m http.server 8080 --directory web
+```
+
+Endpoints principales
+- GET /                -> sirve `web/index.html`
+- GET /api/scrims      -> lista scrims (JSON)
+- POST /api/scrims     -> crea/actualiza scrim (envía objeto JSON)
+- POST /api/demo       -> (demo) crea scrims de ejemplo
 
 Archivos de datos
-- `data/users.csv`, `data/scrims.ndjson`, `data/reports.ndjson`, `data/strikes.ndjson`.
+- `data/scrims.ndjson`  (NDJSON: una entrada JSON por línea)
+- `data/reports.ndjson`, `data/strikes.ndjson`, `data/users.csv`
 
-Notas
-- El servidor está implementado con `com.sun.net.httpserver.HttpServer` y sirve la carpeta `web/` desde el working directory.
-- Si necesitás compilar código Java, podés usar:
+Desarrollo y pruebas
+- Compilar Java:
 
-   javac -d out $(find src -name "*.java")
+```bash
+javac -d out $(find src -name "*.java")
+```
 
-State diagram
-See `docs/state_diagram.md` for the scrim state diagram (text + mermaid).
+- Crear scrim demo (desde consola):
+
+```bash
+curl -X POST http://localhost:9090/api/demo
+```
+
+- Verificar scrims guardados:
+
+```bash
+curl http://localhost:9090/api/scrims
+tail -n 20 data/scrims.ndjson
+```
+
+Cambios recientes y notas importantes
+- Se mejoró la persistencia NDJSON en `src/facade/ScrimAPIFacade.java` para generar líneas JSON válidas.
+- Frontend: `web/app.js` ahora preserva scrims optimistas y mapea bots a nombres amigables por scrim (ej. "Jugador 01"). También se añadió soporte para mostrar "Ranking" junto al participante.
+- Se eliminaron botones propietarios de prueba ("Simular confirmar", "Limpiar bots") de la UI y se añadió una defensa para ocultarlos si algún render cached los reintroduce.
+
+Buenas prácticas y recomendaciones
+- Ignorar archivos de runtime (añadir a `.gitignore`):
+   - `server.log`, `data/*.ndjson`, `.DS_Store`
+- Evitar editar `data/scrims.ndjson` mientras el servidor está corriendo.
+
+Documentación adicional
+- Diagramas de estado y documentación adicional están en `docs/state_diagram.md`.
+- Notas históricas y cambios previos se archivaron en `docs/ARCHIVE_NOTAS.md`.
 
 Contacto
-Para cambios mayores o preguntas, abrí un issue en el repo.
+- Abrí un issue en el repo para cambios mayores o para coordinar integraciones.
+
+``` 
