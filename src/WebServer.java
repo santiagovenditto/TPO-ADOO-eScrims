@@ -325,8 +325,9 @@ public class WebServer {
                     InputStream in = ex.getRequestBody();
                     String body = new String(in.readAllBytes(), StandardCharsets.UTF_8).trim();
                     if (body.isEmpty()) { sendJson(ex,400,"{\"ok\":false,\"message\":\"empty body\"}"); return; }
-                    appendNdjson("scrims.ndjson", body);
-                    sendJson(ex,200,"{\"ok\":true}");
+                        appendNdjson("scrims.ndjson", body);
+                        // return the created scrim object to the client for immediate reconciliation
+                        sendJson(ex,200,"{\"ok\":true,\"scrim\":" + body + "}");
                     return;
                 }
                 sendJson(ex,405,"{\"ok\":false,\"message\":\"Method not allowed\"}");

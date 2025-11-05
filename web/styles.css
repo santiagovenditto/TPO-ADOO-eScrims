@@ -148,3 +148,7 @@ small{color:var(--muted)}
 .results-form label{display:block;margin-top:8px;font-size:13px;color:var(--muted)}
 .results-form input,.results-form textarea{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
 .results-form .submit-row{display:flex;gap:8px;margin-top:10px}
+
+/* moderation */
+.mod-item{padding:10px;border-radius:8px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02)}
+.mod-item .btn{margin-top:8px}

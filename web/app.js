@@ -134,15 +134,31 @@ const createScrimBtn = $('createScrimBtn');
 function loadScrims(){
   try{ return JSON.parse(localStorage.getItem(SCRIM_KEY) || '[]'); }catch(e){ return []; }
 }
-function saveScrims(arr){ localStorage.setItem(SCRIM_KEY, JSON.stringify(arr)); }
+function saveScrims(arr){ localStorage.setItem(SCRIM_KEY, JSON.stringify(arr)); try{ console.debug('[app] saveScrims -> count=', Array.isArray(arr)?arr.length:0, 'sampleIds=', Array.isArray(arr)?arr.slice(0,5).map(x=>x.id):[]); }catch(e){} }
 
 async function refreshScrimsFromServer(){
   try{
+    console.debug('[app] refreshScrimsFromServer -> fetching', API + '/scrims');
     const r = await fetch(API + '/scrims');
-    if(r.ok){ const j = await r.json(); if(Array.isArray(j)){ localStorage.setItem(SCRIM_KEY, JSON.stringify(j)); return j; } }
-  }catch(e){ /* ignore */ }
+    if(r.ok){ const j = await r.json(); if(Array.isArray(j)){ try{ console.debug('[app] refreshScrimsFromServer -> fetched count=', j.length, 'sampleIds=', j.slice(0,6).map(x=>x.id)); }catch(e){}
+        // merge optimistic items persisted with prefix optimistic_
+        try{
+          const merged = Array.isArray(j)? j.slice() : [];
+          for(let i=0;i<localStorage.length;i++){
+            const k = localStorage.key(i);
+            if(k && k.startsWith && k.startsWith('optimistic_')){
+              try{ const o = JSON.parse(localStorage.getItem(k)||'null'); if(o && o.id && !merged.some(x=>x && x.id===o.id)) merged.unshift(o); }catch(e){}
+            }
+          }
+          localStorage.setItem(SCRIM_KEY, JSON.stringify(merged));
+          try{ console.debug('[app] refreshScrimsFromServer -> merged optimistic count=', merged.length); }catch(e){}
+          return merged;
+        }catch(e){ localStorage.setItem(SCRIM_KEY, JSON.stringify(j)); return j; }
+      } }
+  }catch(e){ console.debug('[app] refreshScrimsFromServer -> fetch error', e); }
   return loadScrims();
 }
+
 
 // Sync a scrim object to server: prefer update endpoint, fallback to delete+post if not available.
 async function syncScrimToServer(scrim){
@@ -166,6 +182,7 @@ function newScrimObject(title, format, region, owner){
 
 function renderScrims(){
   const list = loadScrims();
+  try{ console.debug('[app] renderScrims -> count=', Array.isArray(list)?list.length:0, 'ids=', Array.isArray(list)?list.slice(0,6).map(x=>x.id):[]); }catch(e){}
   scrimListContainer.innerHTML = '';
   if(list.length===0){ scrimListContainer.innerHTML = '<div class="scrim-meta">No hay scrims. Crea el primero.</div>'; return; }
   list.forEach(s => {
@@ -269,6 +286,12 @@ function renderScrims(){
 
   // if has waitlist, show small indicator
   if(s.waitlist && s.waitlist.length>0){ const wl=document.createElement('div'); wl.style.fontSize='12px'; wl.style.color='var(--muted)'; wl.textContent = 'Suplentes: '+s.waitlist.length; left.appendChild(wl); }
+    // if finalized, show brief results summary and a view button
+    if(s.state==='Finalizado' && s.results){
+      const sum = document.createElement('div'); sum.style.marginTop='8px'; sum.style.fontSize='13px'; sum.style.fontWeight='600'; sum.textContent = 'Resultado: ' + (s.results.winner || '') + (s.results.mvp?(' • MVP: '+s.results.mvp):'');
+      left.appendChild(sum);
+      const view = createActionBtn('Ver resultados', ()=> showResultsDetail(s),'ghost'); view.style.marginTop='6px'; left.appendChild(view);
+    }
 
     right.appendChild(actions);
 
@@ -278,6 +301,19 @@ function renderScrims(){
   // schedule reminder for this scrim (if applicable)
   try{ scheduleRemindersForScrim(s); }catch(e){}
   });
+}
+
+function showResultsDetail(s){
+  const area = document.getElementById('resultsArea'); if(!area) return;
+  if(!s || !s.results){ area.innerHTML = 'No hay resultados para esta partida.'; return; }
+  const r = s.results;
+  area.innerHTML = `<div style="font-weight:700">Resultados — ${escapeHtml(s.title||s.id)}</div>
+    <div style="margin-top:8px">Ganador: <b>${escapeHtml(r.winner||'')}</b></div>
+    <div>MVP: ${escapeHtml(r.mvp||'')}</div>
+    <div>Kills/Assists: ${escapeHtml(r.kills||'')}</div>
+    <div>Rating: ${escapeHtml(r.rating||'')}</div>
+    <div style="margin-top:8px">Notas: ${escapeHtml(r.notes||'')}</div>
+    <div style="margin-top:10px;color:var(--muted);font-size:12px">Registrado por: ${escapeHtml(r.recordedBy||'system')} — ${new Date(r.time||Date.now()).toLocaleString()}</div>`;
 }
 
 function createActionBtn(text, handler, kind='primary'){
@@ -306,17 +342,25 @@ function showResultsForm(scrim){
   area.innerHTML = '';
   const f = document.createElement('div'); f.className='results-form';
   f.innerHTML = `<label>Ganador (equipo)</label><input id="resWinner" placeholder="Equipo A / Equipo B" />
-    <label>Notas / MVP</label><textarea id="resNotes" rows="3"></textarea>
+    <label>MVP</label><input id="resMVP" placeholder="Jugador destacado" />
+    <label>Kills / Assists</label><input id="resKills" placeholder="ej. 12/8" />
+    <label>Rating (1-5)</label><select id="resRating"><option value="">(sin rating)</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+    <label>Comentarios</label><textarea id="resNotes" rows="3"></textarea>
     <div class="submit-row"><button id="resSubmit" class="btn primary">Guardar</button><button id="resClear" class="btn ghost">Cancelar</button></div>`;
   area.appendChild(f);
   document.getElementById('resSubmit').addEventListener('click', ()=>{
     const winner = document.getElementById('resWinner').value.trim(); const notes = document.getElementById('resNotes').value.trim();
+    const mvp = document.getElementById('resMVP').value.trim(); const kills = document.getElementById('resKills').value.trim(); const rating = document.getElementById('resRating').value;
     const arr = loadScrims(); const s = arr.find(x=>x.id===scrim.id); if(!s) return;
-    s.results = {winner, notes, recordedBy: (getSession()||{}).username || 'anon', time: Date.now()}; saveScrims(arr); renderScrims(); pushNotif('Resultados cargados para '+s.title);
+    s.results = {winner, notes, mvp, kills, rating, recordedBy: (getSession()||{}).username || 'anon', time: Date.now()}; saveScrims(arr); renderScrims(); pushNotif('Resultados cargados para '+s.title);
+  // moderation removed: feedback stored directly (no moderation queue)
     area.innerHTML = 'Resultados guardados.';
   });
   document.getElementById('resClear').addEventListener('click', ()=>{ area.innerHTML = 'Cancelado.'; });
 }
+
+// moderation UI
+// Moderation removed (no moderation queue)
 
 // render notifs on load
 document.addEventListener('DOMContentLoaded', ()=>{ renderNotifs(); });
@@ -389,7 +433,11 @@ function stateBadgeClass(state){
 function changeState(id, to){
   const arr = loadScrims();
   const s = arr.find(x=>x.id===id); if(!s) return;
-  s.state = to; saveScrims(arr); renderScrims();
+  s.state = to;
+  if(to==='Finalizado' && !s.results){
+    s.results = generateResultsForScrim(s);
+  }
+  saveScrims(arr); renderScrims();
   try{ syncScrimToServer(s).catch(()=>{}); }catch(e){}
   try{ notifyStateChange(id, to); }catch(e){}
 }
@@ -418,7 +466,12 @@ function advanceStateSimulation(id){
 
 // small helper to animate badge and push a notification
 function notifyStateChange(id, newState){
-  pushNotif('Scrim '+id+' cambió a '+newState);
+  // try to include scrim title for better readability
+  try{
+    const arr = loadScrims(); const s = arr.find(x=>x.id===id);
+    if(s && s.title){ pushNotif('Scrim "'+s.title+'" cambió a '+newState); }
+    else { pushNotif('Scrim '+id+' cambió a '+newState); }
+  }catch(e){ pushNotif('Scrim '+id+' cambió a '+newState); }
   // attempt to add pulse class to the visible badge for this scrim in DOM
   try{
     const cards = document.querySelectorAll('.scrim-card');
@@ -503,7 +556,8 @@ function simulateStart(id){
 
 function simulateFinish(id){
   const arr = loadScrims(); const s = arr.find(x=>x.id===id); if(!s) return;
-  s.state = 'Finalizado'; s.results = { winner: 'Equipo A', notes: 'Simulación automática', recordedBy: (getSession()||{}).username||'owner', time: Date.now() };
+  s.state = 'Finalizado';
+  if(!s.results) s.results = generateResultsForScrim(s);
   saveScrims(arr); renderScrims();
   try{ syncScrimToServer(s).catch(()=>{}); }catch(e){}
 }
@@ -526,9 +580,41 @@ setInterval(()=>{
     if(s.state==='Confirmado' && s.date){
       const t = new Date(s.date).getTime(); if(!isNaN(t) && t<=now){ s.state='EnJuego'; changed=true; }
     }
+    // if scrim is EnJuego and date passed long enough, auto-finalize (demo: +10s)
+    if(s.state==='EnJuego' && s.date){
+      const t = new Date(s.date).getTime(); if(!isNaN(t) && t+10000<=now){ s.state='Finalizado'; if(!s.results) s.results = generateResultsForScrim(s);
+        // attempt to sync and notify for this scrim
+        try{ syncScrimToServer(s).catch(()=>{}); }catch(e){}
+        try{ notifyStateChange(s.id,'Finalizado'); }catch(e){}
+        changed=true; }
+    }
   });
   if(changed) { saveScrims(arr); renderScrims(); }
 }, 5000);
+
+// generate plausible results for a scrim (winner, mvp, kills/assists, rating)
+function generateResultsForScrim(s){
+  try{
+    const players = (s.participants||[]).filter(p=>p && !p.startsWith('bot_'));
+    const bots = (s.participants||[]).filter(p=>p && p.startsWith && p.startsWith('bot_'));
+    // pick winner randomly between Equipo A / Equipo B
+    const winner = Math.random()>0.5 ? 'Equipo A' : 'Equipo B';
+    // choose mvp from players if available, else from bots, else random name
+    let mvp = null;
+    if(players.length>0) mvp = players[Math.floor(Math.random()*players.length)];
+    else if(bots.length>0) mvp = bots[Math.floor(Math.random()*bots.length)];
+    else mvp = 'Jugador_'+Math.floor(1000+Math.random()*9000);
+    // kills/assists plausible values
+    const k = 8 + Math.floor(Math.random()*15); const a = 2 + Math.floor(Math.random()*10);
+    const kills = k + '/' + a;
+    const rating = 3 + Math.floor(Math.random()*3); // 3-5
+    const notes = 'Resultados generados automáticamente';
+  // moderation removed: results stored directly on scrim (no moderation queue)
+    // push notification summary
+    try{ pushNotif('Resultados generados para "'+(s.title||s.id)+'" — '+mvp+' ('+kills+')'); }catch(e){}
+    return { winner, notes, mvp, kills, rating, recordedBy: 'system', time: Date.now() };
+  }catch(e){ return { winner: 'Equipo A', notes: 'Simulación automática', recordedBy: 'system', time: Date.now() }; }
+}
 
 async function removeScrim(id){
   try{
@@ -540,7 +626,9 @@ async function removeScrim(id){
 
 function escapeHtml(s){ return (s+'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-createScrimBtn.addEventListener('click', async ()=>{
+// named handler so we can call it from delegated listeners if needed
+async function handleCreateScrim(){
+  try{ window.handleCreateScrim = handleCreateScrim; }catch(e){}
   const title = $('scrimTitle').value.trim() || 'Scrim';
   const format = $('scrimFormat').value;
   const region = $('scrimRegion').value.trim() || 'Any';
@@ -560,10 +648,73 @@ createScrimBtn.addEventListener('click', async ()=>{
   if (scrRemVal && scrRemVal.trim()!=='') rh = parseInt(scrRemVal) || 0;
   if (rh<=0) rh = parseInt(document.getElementById('prefReminderGlobal')?.value || '0') || 0;
   if(rh>0) obj.reminderHours = rh;
-  try{ await fetch(API + '/scrims', {method:'POST', body: JSON.stringify(obj), headers:{'Content-Type':'application/json'}}); }catch(e){}
-  await refreshScrimsFromServer(); renderScrims();
+  // show visible status while sending
+  try{
+    simOutput.textContent = 'Enviando scrim...';
+    const resp = await fetch(API + '/scrims', {method:'POST', body: JSON.stringify(obj), headers:{'Content-Type':'application/json'}});
+    if(!resp.ok){ const txt = await resp.text(); simOutput.textContent = 'Error al crear scrim: ' + resp.status + ' ' + txt; return; }
+    const j = await resp.json().catch(()=>null);
+  if (j && j.ok){
+      simOutput.textContent = 'Scrim creado.';
+      // auto-clear status after short delay so UI doesn't stay 'colgado'
+      try{ setTimeout(()=>{ if(simOutput && simOutput.textContent==='Scrim creado.') simOutput.textContent=''; }, 2000); }catch(e){}
+      // reconcile using server-returned scrim if available, otherwise use optimistic obj
+      let created = obj;
+      try{ if(j.scrim) created = j.scrim; }catch(e){}
+      try{
+        const arr = loadScrims();
+        // remove any existing with same id, then unshift created to keep it at top
+        const filtered = (arr||[]).filter(x=> !(x && x.id && created && created.id && x.id===created.id));
+        filtered.unshift(created);
+        saveScrims(filtered);
+        // persist optimistic copy so future server snapshots merge it
+        try{ localStorage.setItem('optimistic_'+(created.id||('tmp_'+Date.now())), JSON.stringify(created)); }catch(e){}
+        console.log('handleCreateScrim: merged created scrim into localStorage', created.id || created.title);
+        try{ renderScrims(); }catch(e){}
+      }catch(e){ console.error('handleCreateScrim: merging failed', e); }
+      // then schedule a gentle refresh to fetch any other server-side items but reconcile by id
+      try{
+        setTimeout(async ()=>{
+          try{
+            const serverList = await (await fetch(API + '/scrims')).json().catch(()=>null);
+            if(Array.isArray(serverList)){
+              // merge: ensure created is present and prefer server objects for others
+              try{
+                const exists = serverList.some(x=> x && x.id && created && created.id && x.id===created.id);
+                if(!exists) serverList.unshift(created);
+              }catch(e){}
+              // also merge any optimistic saved scrims (persisted temporarily) to avoid losing them
+              try{
+                for(let i=0;i<localStorage.length;i++){
+                  const k = localStorage.key(i);
+                  if(k && k.startsWith && k.startsWith('optimistic_')){
+                    try{ const o = JSON.parse(localStorage.getItem(k)||'null'); if(o && o.id){ if(!serverList.some(x=>x && x.id===o.id)) serverList.unshift(o); } }catch(e){}
+                  }
+                }
+              }catch(e){}
+              saveScrims(serverList);
+              // clear optimistic entry for created id (server acknowledged) if present
+              try{ if(created && created.id) localStorage.removeItem('optimistic_'+created.id); }catch(e){}
+              console.log('handleCreateScrim: reconciled with server list, count=', serverList.length);
+              try{ renderScrims(); }catch(e){}
+            }
+          }catch(e){ console.error('handleCreateScrim: delayed reconcile failed', e); }
+        }, 900);
+      }catch(e){ console.error('handleCreateScrim: schedule reconcile failed', e); }
+    } else {
+      simOutput.textContent = 'Respuesta no OK del servidor: ' + (j && j.message? j.message : JSON.stringify(j));
+    }
+  }catch(e){ simOutput.textContent = 'Error de red al crear scrim: '+ (e && e.message ? e.message : String(e)); }
+  // avoid unconditional overwrite; refresh is done above with reconciliation
   // clear fields
   $('scrimTitle').value=''; $('scrimRegion').value='';
+}
+
+// attach normally if element exists
+if (createScrimBtn) createScrimBtn.addEventListener('click', handleCreateScrim);
+// fallback: delegated listener in case direct binding didn't run due to timing
+document.addEventListener('click', (ev)=>{
+  try{ if(ev.target && ev.target.id==='createScrimBtn'){ handleCreateScrim(); } }catch(e){}
 });
 
 // initial render when app area shown
