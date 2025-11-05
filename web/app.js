@@ -225,19 +225,32 @@ function renderScrims(){
     // participant list with report links and strikes
     if(s.participants && s.participants.length>0){
       const ul = document.createElement('div'); ul.style.marginTop='6px'; ul.style.fontSize='13px';
+      // ensure we have a per-scrim mapping for display names (so names "van con la partida")
+      const arrAll = loadScrims();
+      const localScrim = (arrAll||[]).find(x=>x && x.id===s.id) || s;
+      localScrim.participantNames = localScrim.participantNames || {};
+      // compute next Usuario index based on existing mappings
+      let nextUserIndex = 1;
+      try{
+        Object.values(localScrim.participantNames).forEach(v=>{ const m = (v||'').toString().match(/^Usuario\s+(\d+)$/); if(m) nextUserIndex = Math.max(nextUserIndex, parseInt(m[1]) + 1); });
+      }catch(e){}
+
       s.participants.forEach(p=>{
         const item = document.createElement('div'); item.style.display='flex'; item.style.alignItems='center'; item.style.gap='8px';
-        const name = document.createElement('span'); name.textContent = p;
+        const name = document.createElement('span');
+        // If this is a bot id, assign or reuse a friendly display name "Usuario N"
         if(p && p.startsWith && p.startsWith('bot_')){
           name.className='bot-name';
-          // try to read metadata stored for this bot
-          let meta = null; try{ meta = JSON.parse(localStorage.getItem('bot_meta_'+p) || 'null'); }catch(e){ meta = null; }
-          const bl = document.createElement('span'); bl.className='bot-label'; bl.textContent='Bot'; bl.style.marginLeft='6px'; bl.style.fontSize='12px'; bl.style.opacity='0.95';
-          if(meta){
-            bl.title = 'Role: '+(meta.role||'n/a')+' • MMR: '+(meta.mmr||'n/a')+' • '+(meta.latency||'?')+'ms';
-            const mm = document.createElement('span'); mm.className='bot-mmr'; mm.textContent = ' • MMR '+(meta.mmr||''); mm.style.marginLeft='8px'; mm.style.fontSize='12px'; mm.style.opacity='0.9'; item.appendChild(name); item.appendChild(bl); item.appendChild(mm);
-          } else { item.appendChild(name); item.appendChild(bl); }
-        } else { item.appendChild(name); }
+          let display = localScrim.participantNames[p];
+          if(!display){ display = 'Usuario ' + (nextUserIndex++); localScrim.participantNames[p] = display; }
+          name.textContent = display;
+          // attach small hover metadata if available
+          try{ const meta = JSON.parse(localStorage.getItem('bot_meta_'+p) || 'null'); if(meta){ name.title = 'Role: '+(meta.role||'n/a')+' • MMR: '+(meta.mmr||'n/a')+' • '+(meta.latency||'?')+'ms'; } }catch(e){}
+          item.appendChild(name);
+        } else {
+          name.textContent = p;
+          item.appendChild(name);
+        }
   // strikes count
   const strikes = JSON.parse(localStorage.getItem('strikes_'+p)||'[]').length;
   if(strikes>0){ const sb = document.createElement('span'); sb.className='badge'; sb.textContent = '⚠️ '+strikes; sb.style.marginLeft='6px'; item.appendChild(sb); }
@@ -249,6 +262,9 @@ function renderScrims(){
         item.appendChild(rpt);
         ul.appendChild(item);
       });
+      // persist updated mapping into local scrim store so it "va con la partida"
+      try{ if(localScrim && localScrim.id){ const all = loadScrims(); const target = all.find(x=>x && x.id===localScrim.id); if(target){ target.participantNames = localScrim.participantNames; saveScrims(all); } }
+      }catch(e){}
       left.appendChild(ul);
     }
 
