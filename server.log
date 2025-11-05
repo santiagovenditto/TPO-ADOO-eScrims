@@ -1,4 +1,58 @@
-[AUTH][DEBUG] CWD: /Users/federicovargas/Desktop/tpo prueba/TPO-ADOO-eScrims
-[AUTH][DEBUG] DATA DIR: /Users/federicovargas/Desktop/tpo prueba/TPO-ADOO-eScrims/data
-[AUTH][DEBUG] USERS FILE: /Users/federicovargas/Desktop/tpo prueba/TPO-ADOO-eScrims/data/users.csv
+[AUTH][DEBUG] CWD: /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims
+[AUTH][DEBUG] DATA DIR: /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/data
+[AUTH][DEBUG] USERS FILE: /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/data/users.csv
 Web server started. Open http://localhost:9090
+[STATIC] Requested path: /index.html
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/index.html
+[STATIC] Requested path: /
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/index.html
+[STATIC] Requested path: /styles.css
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/styles.css
+[STATIC] Requested path: /app.js
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/app.js
+[STATIC] Requested path: /
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/index.html
+[STATIC] Requested path: /styles.css
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/styles.css
+[STATIC] Requested path: /app.js
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/app.js
+[STATIC] Requested path: /
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/index.html
+[STATIC] Requested path: /app.js
+[STATIC] Requested path: /styles.css
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/app.js
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/styles.css
+[STATIC] Requested path: /
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/index.html
+[STATIC] Requested path: /styles.css
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/styles.css
+[STATIC] Requested path: /app.js
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/app.js
+[STATIC] Requested path: /
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/index.html
+[STATIC] Requested path: /styles.css
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/styles.css
+[STATIC] Requested path: /app.js
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/app.js
+[STATIC] Requested path: /index.html
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/index.html
+[STATIC] Requested path: /
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/index.html
+[STATIC] Requested path: /styles.css
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/styles.css
+[STATIC] Requested path: /app.js
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/app.js
+[STATIC] Requested path: /index.html
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/index.html
+[STATIC] Requested path: /
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/index.html
+[STATIC] Requested path: /styles.css
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/styles.css
+[STATIC] Requested path: /app.js
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/app.js
+[STATIC] Requested path: /
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/index.html
+[STATIC] Requested path: /styles.css
+[STATIC] Requested path: /app.js
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/app.js
+[STATIC] webRoot= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web resolved file= /Users/federicovargas/Desktop/Tpo Adoo Final/TPO-ADOO-eScrims/web/styles.css

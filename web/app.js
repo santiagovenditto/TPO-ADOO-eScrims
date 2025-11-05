@@ -11,6 +11,9 @@ const regNotice = $('regNotice');
 const appArea = $('appArea');
 const userLabel = $('userLabel');
 const logoutBtn = $('logoutBtn');
+const topLogoutBtn = $('topLogoutBtn');
+const avatarImg = $('avatarImg');
+const topUserLabel = $('topUserLabel');
 const simOutput = document.createElement('pre');
 
 simOutput.style.maxHeight = '300px'; simOutput.style.overflow = 'auto'; simOutput.style.background = 'rgba(0,0,0,0.12)'; simOutput.style.padding = '12px'; simOutput.style.borderRadius = '8px';
@@ -30,6 +33,15 @@ function setLogged(username, token){
   loginForm.classList.remove('active');
   registerForm.classList.remove('active');
   appArea.classList.remove('hidden');
+  if(topLogoutBtn) topLogoutBtn.style.display = 'inline-block';
+  if(avatarImg){
+    // use DiceBear bottts for gamer-ish avatars
+    avatarImg.src = 'https://api.dicebear.com/7.x/bottts/svg?seed='+encodeURIComponent(username);
+    avatarImg.style.display = 'inline-block';
+  }
+  if(topUserLabel) { topUserLabel.textContent = username; topUserLabel.style.display='inline-block'; }
+  // also replace main avatar with a themed avatar based on user
+  const main = document.getElementById('mainAvatar'); if(main) main.src = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+encodeURIComponent(username);
   // apply saved preferences (or defaults) to UI for this user
   try{ applyPrefsToUI(username); }catch(e){}
 }
@@ -55,7 +67,12 @@ function logout(){
   const s = getSession();
   if(s && s.token){ fetch(API + '/logout', {method:'POST', body: JSON.stringify({token: s.token}), headers:{'Content-Type':'application/json'}}).catch(()=>{}); }
   localStorage.removeItem('session');
+  // Clear UI session and show login form. Also ensure SPA navigates to root so any internal state resets.
   showForm('login');
+  if(avatarImg) { avatarImg.style.display='none'; avatarImg.src=''; }
+  const main = document.getElementById('mainAvatar'); if(main) main.src = 'https://api.dicebear.com/7.x/bottts/svg?seed=eScrims';
+  if(topUserLabel) { topUserLabel.style.display='none'; }
+  try{ window.location.href = '/'; }catch(e){}
 }
 
 async function postJson(path, body){
@@ -108,6 +125,7 @@ loginForm.addEventListener('submit', async e =>{
 });
 
 logoutBtn.addEventListener('click', ()=>{ logout(); });
+if(topLogoutBtn) topLogoutBtn.addEventListener('click', ()=>{ logout(); });
 
 // run simulation button in app area
 const runBtn = document.createElement('button'); runBtn.className='btn ghost'; runBtn.textContent='Ejecutar simulación (server)';

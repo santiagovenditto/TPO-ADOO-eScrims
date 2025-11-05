@@ -90,5 +90,6 @@ public class Main {
         scrimDeEstados.finalizarPartida();
 
         System.out.println("\n========= FIN DE LA SIMULACIÓN 2 =========");
+    // Nota: demos automáticos se exponen ahora vía /api/demo en WebServer
     }
 }

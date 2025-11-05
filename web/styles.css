@@ -26,7 +26,7 @@ body{
   border:1px solid rgba(255,255,255,0.04);
 }
 .brand{width:320px;padding:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px}
-.logo{width:72px;height:72px;display:block;margin-bottom:12px}
+.logo{width:72px;height:72px;display:block;margin-bottom:12px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.04);box-shadow:0 6px 18px rgba(2,6,23,0.5)}
 .brand h1{margin:0 0 6px;font-size:26px}
 .subtitle{margin:0;color:var(--muted)}
 .forms{flex:1;padding:6px}
@@ -53,6 +53,10 @@ body{
 .card::before{content:"";position:absolute;left:0;right:0;top:0;bottom:0;border-radius:16px;pointer-events:none;background:linear-gradient(180deg, rgba(124,92,255,0.04), rgba(0,212,255,0.02));mix-blend-mode:overlay}
 /* small helper */
 small{color:var(--muted)}
+
+/* header user/ avatar */
+#topUserLabel{font-size:14px;color:var(--text);margin-right:6px}
+#avatarImg{box-shadow:0 2px 8px rgba(2,6,23,0.5)}
 
 /* Scrim UI */
 .scrim-area{display:flex;gap:16px;margin-top:18px;align-items:flex-start}

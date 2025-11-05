@@ -29,8 +29,8 @@ public class WebServer {
     Path dataDir = Paths.get(System.getProperty("user.dir"), "data");
     if (!Files.exists(dataDir)) Files.createDirectories(dataDir);
 
-        // static
-        server.createContext("/", this::handleStatic);
+    // static
+    server.createContext("/", this::handleStatic);
 
         // API
         server.createContext("/api/register", new RegisterHandler());
@@ -38,6 +38,8 @@ public class WebServer {
         server.createContext("/api/logout", new LogoutHandler());
         server.createContext("/api/session", new SessionHandler());
         server.createContext("/api/run", new RunHandler());
+    // demo endpoint to create a confirmed scrim scheduled shortly
+    server.createContext("/api/demo", new DemoHandler());
     // scrims persistence (NDJSON simple storage)
     server.createContext("/api/scrims", new ScrimsHandler());
     server.createContext("/api/scrims/delete", new ScrimDeleteHandler());
@@ -56,20 +58,47 @@ public class WebServer {
     private void handleStatic(HttpExchange ex) {
         try {
             String path = ex.getRequestURI().getPath();
+            System.out.println("[STATIC] Requested path: " + path);
             if (path.equals("/")) path = "/index.html";
             Path file = webRoot.resolve(path.substring(1)).normalize();
+            System.out.println("[STATIC] webRoot= " + webRoot.toString() + " resolved file= " + file.toString());
             if (!file.startsWith(webRoot) || !Files.exists(file) || Files.isDirectory(file)) {
+                System.out.println("[STATIC] File not found or invalid: exists=" + Files.exists(file) + " isDir=" + Files.isDirectory(file));
                 sendText(ex, 404, "Not found");
                 return;
             }
             String ct = guessContentType(file.toString());
             byte[] data = Files.readAllBytes(file);
             ex.getResponseHeaders().set("Content-Type", ct + "; charset=utf-8");
+            // HEAD requests should not send a body
+            if (ex.getRequestMethod().equalsIgnoreCase("HEAD")) {
+                ex.sendResponseHeaders(200, -1);
+                return;
+            }
             ex.sendResponseHeaders(200, data.length);
             try (OutputStream os = ex.getResponseBody()) { os.write(data); }
         } catch (Exception e) {
             e.printStackTrace();
             try { sendText(ex, 500, "Server error: " + e.getMessage()); } catch (Exception ignored) {}
+        }
+    }
+
+    // Demo handler: crea un scrim confirmado con fechaHora = now + 5s
+    class DemoHandler implements HttpHandler {
+        public void handle(HttpExchange ex) throws IOException {
+            if (!ex.getRequestMethod().equalsIgnoreCase("POST")) { sendJson(ex,405,"{\"ok\":false,\"message\":\"Method not allowed\"}"); return; }
+            try {
+                // crear scrim, fijar fecha
+                domain.Scrim demo = new domain.Scrim(new strategy.ByMMRStrategy());
+                java.time.LocalDateTime when = java.time.LocalDateTime.now().plusSeconds(5);
+                demo.setFechaHora(when);
+                demo.setState(new state.ConfirmadoState());
+                // persist demo scrim as minimal JSON object so it appears in the UI list
+                String scrimJson = String.format("{\"id\":\"%s\",\"format\":\"5v5\",\"start\":\"%s\",\"state\":\"Confirmado\"}", demo.getId().toString(), when.toString());
+                appendNdjson("scrims.ndjson", scrimJson);
+                String json = String.format("{\"ok\":true,\"id\":\"%s\",\"start\":\"%s\"}", demo.getId().toString(), when.toString());
+                sendJson(ex,200,json);
+            } catch (Exception e) { e.printStackTrace(); sendJson(ex,500,"{\"ok\":false,\"message\":\"server error\"}"); }
         }
     }
 

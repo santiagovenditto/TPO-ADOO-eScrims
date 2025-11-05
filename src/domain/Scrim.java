@@ -8,10 +8,16 @@ import state.ScrimState;
 import strategy.MatchmakingStrategy;
 
 import java.time.LocalDateTime;
+import java.time.Duration;
 
 import java.util.UUID;
 import event.DomainEventBus;
 import event.ScrimStateChanged;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Clase principal del Dominio.
@@ -23,6 +29,15 @@ public class Scrim {
     private ScrimState state;
 
     private MatchmakingStrategy strategy;
+
+    // Shared scheduler to support automatic transition from Confirmado -> EnJuego
+    private static final ScheduledExecutorService SHARED_SCHEDULER = Executors.newScheduledThreadPool(1, r -> {
+        Thread t = new Thread(r);
+        t.setDaemon(true);
+        t.setName("scrim-shared-scheduler");
+        return t;
+    });
+    private ScheduledFuture<?> scheduledStart = null;
 
     private UUID id;
     private String juego;
@@ -83,6 +98,37 @@ public class Scrim {
 
         // 2. Obtenemos el Bus y publicamos el evento
         DomainEventBus.getInstance().publish(evento);
+
+        // Si entramos a estado Confirmado, programamos el inicio automático
+        try {
+            // cancel any existing scheduled start when state changes
+            if (scheduledStart != null && !scheduledStart.isDone()) {
+                scheduledStart.cancel(false);
+                scheduledStart = null;
+            }
+            if (newState.getClass().getSimpleName().equals("ConfirmadoState")) {
+                if (this.fechaHora != null) {
+                    Duration d = Duration.between(LocalDateTime.now(), this.fechaHora);
+                    long delayMs = d.toMillis();
+                    if (delayMs <= 0) {
+                        // time already passed or is now: start immediately (async)
+                        SHARED_SCHEDULER.execute(() -> {
+                            try { this.iniciarPartida(); } catch (Exception ignored) {}
+                        });
+                    } else {
+                        scheduledStart = SHARED_SCHEDULER.schedule(() -> {
+                            try { this.iniciarPartida(); } catch (Exception e) { e.printStackTrace(); }
+                        }, delayMs, TimeUnit.MILLISECONDS);
+                        System.out.println("Scheduled automatic start in " + delayMs + " ms for scrim " + this.id);
+                    }
+                } else {
+                    System.out.println("Confirmado: fecha/hora no definida, no se programará inicio automático.");
+                }
+            }
+        } catch (Exception e) {
+            // no queremos que un fallo en el scheduler rompa la lógica
+            e.printStackTrace();
+        }
     }
 
     // Getters y Setters
