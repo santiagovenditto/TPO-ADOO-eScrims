@@ -68,11 +68,13 @@ function logout(){
   if(s && s.token){ fetch(API + '/logout', {method:'POST', body: JSON.stringify({token: s.token}), headers:{'Content-Type':'application/json'}}).catch(()=>{}); }
   localStorage.removeItem('session');
   // Clear UI session and show login form. Also ensure SPA navigates to root so any internal state resets.
+  // show login form in SPA
   showForm('login');
+  // hide top controls and avatar
+  if(topLogoutBtn) topLogoutBtn.style.display = 'none';
   if(avatarImg) { avatarImg.style.display='none'; avatarImg.src=''; }
   const main = document.getElementById('mainAvatar'); if(main) main.src = 'https://api.dicebear.com/7.x/bottts/svg?seed=eScrims';
-  if(topUserLabel) { topUserLabel.style.display='none'; }
-  try{ window.location.href = '/'; }catch(e){}
+  if(topUserLabel) { topUserLabel.style.display='none'; topUserLabel.textContent=''; }
 }
 
 async function postJson(path, body){
